@@ -900,6 +900,13 @@
     // „Nochmal" wird immer in derselben Sitzung wiederholt.
     var requeue = (g === 1) || ivl < 1;
     var days = Math.max(1, Math.round(ivl));
+    // Deadline: kein Intervall über den Prüfungstermin hinaus. Je näher die
+    // Frist, desto kürzer die Abstände — so kommt jede Karte bis dahin dran.
+    // (Merkmodell S/D bleibt unverändert, nur der Wiedervorlage-Tag wird begrenzt.)
+    if (deck.deadline) {
+      var daysLeft = diffDays(todayStr(), deck.deadline);
+      if (daysLeft >= 1 && days > daysLeft) { days = daysLeft; requeue = false; }
+    }
     return { S: round2(S), D: round2(D), days: days, requeue: requeue,
       due: requeue ? todayStr() : addDays(todayStr(), days) };
   }
@@ -950,6 +957,9 @@
           'mind. <strong>' + recommended + '</strong> neue/Tag. ' +
           'Bei ' + (deck.newPerDay || 0) + '/Tag bist du in <strong>' + finishIn + '</strong> Tagen durch — ' +
           (onTrack ? '<span class="plan-ok">rechtzeitig ✓</span>' : '<span class="plan-warn">zu langsam ⚠ Tempo erhöhen</span>') + '.');
+      }
+      if (daysLeft >= 0) {
+        parts.push('<span class="plan-muted">Je näher der Termin, desto kürzer die Wiederhol-Abstände — keine Karte wird über den Termin hinaus geplant.</span>');
       }
     } else {
       parts.push('<span class="plan-muted">Trage einen Prüfungstermin ein, um dein Lernpensum zu berechnen.</span>');
@@ -1179,7 +1189,6 @@
     document.getElementById('fcDivider').hidden = true;
     document.getElementById('fcShow').hidden = false;
     document.getElementById('fcRate').hidden = true;
-    document.getElementById('fcExplain').hidden = true;
     document.getElementById('studyProgress').textContent = (study.queue.length + 1) + ' übrig' +
       (study.done ? ' · ' + study.done + ' gelernt' : '');
   }
@@ -1198,11 +1207,6 @@
         var el = document.querySelector('[data-ivl="' + k + '"]');
         if (el) el.textContent = (k === 'again') ? 'gleich' : fmtInterval(r.requeue ? 0 : r.days);
       });
-      var ex = document.getElementById('fcExplain');
-      ex.textContent = 'Der Zeitpunkt zeigt, wann die Karte wieder abgefragt wird. ' +
-        '„Nochmal" = vergessen (kommt gleich noch mal) · „Gut" = gewusst. Ziel-Merkrate: ' +
-        Math.round((deck.retention || 0.9) * 100) + ' %.';
-      ex.hidden = false;
     }
   }
 

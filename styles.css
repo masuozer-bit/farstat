@@ -505,7 +505,6 @@ body.modal-open { overflow: hidden; }
 .fc-good  { background: var(--primary); }
 .fc-easy  { background: #4f9d7e; }
 .fc-rate .btn:hover { filter: brightness(0.94); }
-.fc-explain { margin-top: 12px; font-size: 0.82rem; line-height: 1.5; color: var(--muted); text-align: center; }
 
 .study-done { text-align: center; padding: 30px 10px; }
 .study-done-mark {
