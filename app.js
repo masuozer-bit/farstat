@@ -205,7 +205,7 @@
   if (!appShell) return; // keine Dashboard-Seite -> fertig
 
   var user = null;
-  var data = { termine: [], plan: [], docs: [], avail: [], materials: [], decks: [] };
+  var data = { termine: [], plan: [], docs: [], avail: [], materials: [], decks: [], folders: [] };
 
   (async function initDashboard() {
     if (!sb) { window.location.href = 'anmelden.html'; return; }
@@ -288,7 +288,10 @@
       return { id: r.id, name: r.name, size: r.size, type: r.type, date: r.created_at, path: r.storage_path };
     });
 
-    var decks = await sb.from('decks').select('id,name,deadline,retention,new_per_day,created_at').order('created_at', { ascending: true });
+    var folders = await sb.from('folders').select('id,name,created_at').order('created_at', { ascending: true });
+    data.folders = (folders.data || []).map(function (f) { return { id: f.id, name: f.name }; });
+
+    var decks = await sb.from('decks').select('id,name,folder_id,deadline,retention,new_per_day,created_at').order('created_at', { ascending: true });
     var cards = await sb.from('cards').select('id,deck_id,front,back,state,difficulty,stability,due,last_review,reps,lapses,created_at').order('created_at', { ascending: true });
     var byDeck = {};
     (cards.data || []).forEach(function (c) {
@@ -300,7 +303,7 @@
     });
     data.decks = (decks.data || []).map(function (d) {
       return {
-        id: d.id, name: d.name, cards: byDeck[d.id] || [],
+        id: d.id, name: d.name, folder_id: d.folder_id || '', cards: byDeck[d.id] || [],
         deadline: d.deadline || '', retention: d.retention || 0.9, newPerDay: (d.new_per_day == null ? 10 : d.new_per_day)
       };
     });
@@ -967,63 +970,162 @@
     return parts.join(' ');
   }
 
+  // Ordner-Auswahl für einen Stapel (im Plan-Panel).
+  function folderOptions(selectedId) {
+    var opts = '<option value=""' + (!selectedId ? ' selected' : '') + '>— kein Ordner —</option>';
+    opts += data.folders.map(function (f) {
+      return '<option value="' + f.id + '"' + (f.id === selectedId ? ' selected' : '') + '>' + esc(f.name) + '</option>';
+    }).join('');
+    return opts;
+  }
+
+  // HTML für einen einzelnen Stapel.
+  function deckHtml(d) {
+    var st = deckStats(d);
+    var cardsHtml = d.cards.map(function (c) {
+      var tag = c.state === 'new' ? '<span class="fc-tag fc-tag-new">neu</span>'
+        : '<span class="fc-tag" title="fällig ' + esc(c.due || '') + '">' + fmtInterval(diffDays(todayStr(), c.due || todayStr())) + '</span>';
+      return '<div class="fc-row">' +
+        '<span class="fc-q"><strong>' + esc(c.front) + '</strong><small>' + esc(c.back) + '</small></span>' +
+        tag +
+        '<button class="icon-btn" data-del-card="' + d.id + '|' + c.id + '" title="Karte löschen">✕</button></div>';
+    }).join('');
+    var meta = st.total + ' Karte' + (st.total === 1 ? '' : 'n') +
+      (st.reviews ? ' · <span class="deck-due">' + st.reviews + ' fällig</span>' : '') +
+      (st.newToday ? ' · <span class="deck-new">' + st.newToday + ' neu</span>' : '');
+    return '<div class="deck">' +
+      '<div class="deck-head">' +
+        '<div class="deck-title"><h3>' + esc(d.name) + '</h3><span class="deck-meta">' + meta + '</span></div>' +
+        '<div class="deck-btns">' +
+          '<button class="btn btn-primary btn-sm" data-study="' + d.id + '"' + (st.todayTotal ? '' : ' disabled') + '>Lernen' + (st.todayTotal ? ' (' + st.todayTotal + ')' : '') + '</button>' +
+          '<button class="btn btn-ghost btn-sm" data-toggle-plan="' + d.id + '">Plan</button>' +
+          '<button class="btn btn-ghost btn-sm" data-toggle-cards="' + d.id + '">Karten</button>' +
+          '<button class="icon-btn" data-del-deck="' + d.id + '" title="Stapel löschen">🗑</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="deck-plan" id="deckPlan-' + d.id + '" hidden>' +
+        '<div class="plan-controls">' +
+          '<label>Ordner<select data-folder="' + d.id + '">' + folderOptions(d.folder_id) + '</select></label>' +
+          '<label>Prüfungstermin<input type="date" data-deadline="' + d.id + '" value="' + esc(d.deadline || '') + '" /></label>' +
+          '<label>Neue Karten / Tag<input type="number" min="0" max="200" data-newperday="' + d.id + '" value="' + (d.newPerDay || 0) + '" /></label>' +
+          '<label>Ziel-Merkrate<span class="ret-line"><input type="range" min="80" max="97" step="1" data-retention="' + d.id + '" value="' + Math.round((d.retention || 0.9) * 100) + '" /><span class="ret-val" id="retVal-' + d.id + '">' + Math.round((d.retention || 0.9) * 100) + ' %</span></span></label>' +
+        '</div>' +
+        '<p class="plan-summary" id="planSummary-' + d.id + '">' + planSummary(d) + '</p>' +
+        '<p class="plan-hint">Höhere Merkrate = kürzere Abstände & mehr Wiederholungen (sicherer). Niedrigere = weniger Aufwand, aber du vergisst öfter.</p>' +
+      '</div>' +
+      '<div class="deck-cards" id="deckCards-' + d.id + '" hidden>' +
+        '<form class="fc-add" data-add-card="' + d.id + '">' +
+          '<input type="text" name="front" placeholder="Vorderseite (Frage)" required />' +
+          '<input type="text" name="back" placeholder="Rückseite (Antwort)" required />' +
+          '<button type="submit" class="btn btn-ghost btn-sm">+ Karte</button>' +
+        '</form>' +
+        (st.total ? cardsHtml : '<p class="empty-note">Noch keine Karten in diesem Stapel.</p>') +
+      '</div>' +
+    '</div>';
+  }
+
+  // Aggregierte Statistik über mehrere Stapel.
+  function sumStats(decks) {
+    return decks.reduce(function (acc, d) {
+      var st = deckStats(d);
+      acc.reviews += st.reviews; acc.newToday += st.newToday; acc.todayTotal += st.todayTotal;
+      return acc;
+    }, { reviews: 0, newToday: 0, todayTotal: 0 });
+  }
+
   function renderDecks() {
     var wrap = document.getElementById('deckList');
-    if (!wrap) return;
-    if (!data.decks.length) {
-      wrap.innerHTML = '<p class="empty-note">Noch keine Stapel. Lege oben deinen ersten an.</p>';
+    if (!wrap) { updateFcSummary(); return; }
+    if (!data.decks.length && !data.folders.length) {
+      wrap.innerHTML = '<p class="empty-note">Noch keine Stapel. Lege oben deinen ersten an — optional in einem Ordner.</p>';
+      updateFcSummary();
       return;
     }
-    wrap.innerHTML = data.decks.map(function (d) {
-      var st = deckStats(d);
-      var cardsHtml = d.cards.map(function (c) {
-        var tag = c.state === 'new' ? '<span class="fc-tag fc-tag-new">neu</span>'
-          : '<span class="fc-tag" title="fällig ' + esc(c.due || '') + '">' + fmtInterval(diffDays(todayStr(), c.due || todayStr())) + '</span>';
-        return '<div class="fc-row">' +
-          '<span class="fc-q"><strong>' + esc(c.front) + '</strong><small>' + esc(c.back) + '</small></span>' +
-          tag +
-          '<button class="icon-btn" data-del-card="' + d.id + '|' + c.id + '" title="Karte löschen">✕</button></div>';
-      }).join('');
-      var meta = st.total + ' Karte' + (st.total === 1 ? '' : 'n') +
-        (st.reviews ? ' · <span class="deck-due">' + st.reviews + ' fällig</span>' : '') +
-        (st.newToday ? ' · <span class="deck-new">' + st.newToday + ' neu</span>' : '');
-      return '<div class="deck">' +
-        '<div class="deck-head">' +
-          '<div class="deck-title"><h3>' + esc(d.name) + '</h3><span class="deck-meta">' + meta + '</span></div>' +
-          '<div class="deck-btns">' +
-            '<button class="btn btn-primary btn-sm" data-study="' + d.id + '"' + (st.todayTotal ? '' : ' disabled') + '>Lernen' + (st.todayTotal ? ' (' + st.todayTotal + ')' : '') + '</button>' +
-            '<button class="btn btn-ghost btn-sm" data-toggle-plan="' + d.id + '">Plan</button>' +
-            '<button class="btn btn-ghost btn-sm" data-toggle-cards="' + d.id + '">Karten</button>' +
-            '<button class="icon-btn" data-del-deck="' + d.id + '" title="Stapel löschen">🗑</button>' +
+    // Stapel den Ordnern zuordnen.
+    var byFolder = {};
+    data.folders.forEach(function (f) { byFolder[f.id] = []; });
+    var loose = [];
+    data.decks.forEach(function (d) {
+      if (d.folder_id && byFolder[d.folder_id]) byFolder[d.folder_id].push(d);
+      else loose.push(d);
+    });
+
+    var html = data.folders.map(function (f) {
+      var decks = byFolder[f.id];
+      var st = sumStats(decks);
+      var metaBits = [decks.length + ' Stapel'];
+      if (st.reviews) metaBits.push('<span class="deck-due">' + st.reviews + ' fällig</span>');
+      if (st.newToday) metaBits.push('<span class="deck-new">' + st.newToday + ' neu</span>');
+      return '<div class="folder">' +
+        '<div class="folder-head">' +
+          '<button class="folder-toggle" data-toggle-folder="' + f.id + '"><span class="folder-caret">▾</span> ' + esc(f.name) + '</button>' +
+          '<span class="folder-meta">' + metaBits.join(' · ') + '</span>' +
+          '<div class="folder-btns">' +
+            '<button class="btn btn-primary btn-sm" data-study-folder="' + f.id + '"' + (st.todayTotal ? '' : ' disabled') + '>Ordner lernen' + (st.todayTotal ? ' (' + st.todayTotal + ')' : '') + '</button>' +
+            '<button class="icon-btn" data-del-folder="' + f.id + '" title="Ordner löschen (Stapel bleiben erhalten)">🗑</button>' +
           '</div>' +
         '</div>' +
-        // Plan & Einstellungen
-        '<div class="deck-plan" id="deckPlan-' + d.id + '" hidden>' +
-          '<div class="plan-controls">' +
-            '<label>Prüfungstermin<input type="date" data-deadline="' + d.id + '" value="' + esc(d.deadline || '') + '" /></label>' +
-            '<label>Neue Karten / Tag<input type="number" min="0" max="200" data-newperday="' + d.id + '" value="' + (d.newPerDay || 0) + '" /></label>' +
-            '<label>Ziel-Merkrate<span class="ret-line"><input type="range" min="80" max="97" step="1" data-retention="' + d.id + '" value="' + Math.round((d.retention || 0.9) * 100) + '" /><span class="ret-val" id="retVal-' + d.id + '">' + Math.round((d.retention || 0.9) * 100) + ' %</span></span></label>' +
-          '</div>' +
-          '<p class="plan-summary" id="planSummary-' + d.id + '">' + planSummary(d) + '</p>' +
-          '<p class="plan-hint">Höhere Merkrate = kürzere Abstände & mehr Wiederholungen (sicherer). Niedrigere = weniger Aufwand, aber du vergisst öfter.</p>' +
-        '</div>' +
-        // Karten
-        '<div class="deck-cards" id="deckCards-' + d.id + '" hidden>' +
-          '<form class="fc-add" data-add-card="' + d.id + '">' +
-            '<input type="text" name="front" placeholder="Vorderseite (Frage)" required />' +
-            '<input type="text" name="back" placeholder="Rückseite (Antwort)" required />' +
-            '<button type="submit" class="btn btn-ghost btn-sm">+ Karte</button>' +
-          '</form>' +
-          (st.total ? cardsHtml : '<p class="empty-note">Noch keine Karten in diesem Stapel.</p>') +
+        '<div class="folder-decks" id="folderDecks-' + f.id + '">' +
+          (decks.length ? decks.map(deckHtml).join('') : '<p class="empty-note">Leerer Ordner — weise unter „Plan" eines Stapels diesen Ordner zu.</p>') +
         '</div>' +
       '</div>';
     }).join('');
+
+    if (loose.length) {
+      html += (data.folders.length ? '<div class="loose-head">Ohne Ordner</div>' : '') +
+        loose.map(deckHtml).join('');
+    }
+    wrap.innerHTML = html;
+    updateFcSummary();
   }
 
   function refreshPlanSummary(deckId) {
     var deck = data.decks.filter(function (d) { return d.id === deckId; })[0];
     var el = document.getElementById('planSummary-' + deckId);
     if (deck && el) el.innerHTML = planSummary(deck);
+  }
+
+  // ---------- Übersicht/Score oben im Bereich + Badge in der Seitenleiste ----------
+  function globalStats() {
+    var today = todayStr();
+    var dueReviews = 0, newToday = 0, totalCards = 0, introduced = 0, retSum = 0;
+    data.decks.forEach(function (d) {
+      var st = deckStats(d);
+      dueReviews += st.reviews; newToday += st.newToday; totalCards += st.total;
+      d.cards.forEach(function (c) {
+        if (c.state !== 'new' && c.stability) {
+          introduced++;
+          var elapsed = c.last_review ? Math.max(0, diffDays(c.last_review, today)) : 0;
+          retSum += retrievability(elapsed, c.stability);
+        }
+      });
+    });
+    var coverage = totalCards ? introduced / totalCards : 0;
+    var avgRet = introduced ? retSum / introduced : 0;
+    return {
+      dueReviews: dueReviews, newToday: newToday, dueTotal: dueReviews + newToday,
+      totalCards: totalCards, introduced: introduced,
+      mastery: Math.round(coverage * avgRet * 100)
+    };
+  }
+
+  function updateFcSummary() {
+    var g = globalStats();
+    // Badge in der Seitenleiste = alles, was heute ansteht.
+    var badge = document.getElementById('fcBadge');
+    if (badge) {
+      badge.textContent = g.dueTotal;
+      badge.hidden = g.dueTotal === 0;
+    }
+    var box = document.getElementById('fcSummary');
+    if (!box) return;
+    if (!g.totalCards) { box.innerHTML = ''; return; }
+    box.innerHTML =
+      '<div class="stat-tile"><span class="stat-num">' + g.dueTotal + '</span><span class="stat-label">heute dran</span></div>' +
+      '<div class="stat-tile"><span class="stat-num">' + g.dueReviews + '</span><span class="stat-label">Wiederholungen fällig</span></div>' +
+      '<div class="stat-tile"><span class="stat-num">' + g.newToday + '</span><span class="stat-label">neue Karten</span></div>' +
+      '<div class="stat-tile stat-score"><span class="stat-num">' + g.mastery + ' %</span><span class="stat-label">Lernstand (Ziel)</span>' +
+        '<span class="stat-bar"><span class="stat-bar-fill" style="width:' + g.mastery + '%"></span></span></div>';
   }
 
   function wireDecks() {
@@ -1035,12 +1137,26 @@
       var name = val('deckName').trim();
       if (!name) return;
       var res = await sb.from('decks').insert({ name: name })
-        .select('id,name,deadline,retention,new_per_day').single();
+        .select('id,name,folder_id,deadline,retention,new_per_day').single();
       if (res.error) return dbError('den Stapel', res.error);
       var r = res.data;
-      data.decks.push({ id: r.id, name: r.name, cards: [], deadline: r.deadline || '', retention: r.retention || 0.9, newPerDay: (r.new_per_day == null ? 10 : r.new_per_day) });
+      data.decks.push({ id: r.id, name: r.name, folder_id: r.folder_id || '', cards: [], deadline: r.deadline || '', retention: r.retention || 0.9, newPerDay: (r.new_per_day == null ? 10 : r.new_per_day) });
       deckForm.reset(); renderDecks(); updateOverview();
     });
+
+    // Ordner anlegen
+    var folderForm = document.getElementById('folderForm');
+    if (folderForm) {
+      folderForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var name = val('folderName').trim();
+        if (!name) return;
+        var res = await sb.from('folders').insert({ name: name }).select('id,name').single();
+        if (res.error) return dbError('den Ordner', res.error);
+        data.folders.push({ id: res.data.id, name: res.data.name });
+        folderForm.reset(); renderDecks();
+      });
+    }
 
     var wrap = document.getElementById('deckList');
 
@@ -1080,11 +1196,20 @@
       var dl = e.target.closest('[data-deadline]');
       var np = e.target.closest('[data-newperday]');
       var rt = e.target.closest('[data-retention]');
-      var target = dl || np || rt;
+      var fo = e.target.closest('[data-folder]');
+      var target = dl || np || rt || fo;
       if (!target) return;
-      var deckId = target.dataset.deadline || target.dataset.newperday || target.dataset.retention;
+      var deckId = target.dataset.deadline || target.dataset.newperday || target.dataset.retention || target.dataset.folder;
       var deck = data.decks.filter(function (d) { return d.id === deckId; })[0];
       if (!deck) return;
+      // Ordner wechseln → Liste neu aufbauen (der Stapel wandert in die andere Gruppe).
+      if (fo) {
+        deck.folder_id = fo.value || '';
+        var fres = await sb.from('decks').update({ folder_id: fo.value || null }).eq('id', deckId);
+        if (fres.error) dbError('den Ordner', fres.error);
+        renderDecks();
+        return;
+      }
       var patch = {};
       if (dl) { deck.deadline = dl.value || ''; patch.deadline = dl.value || null; }
       if (np) { deck.newPerDay = Math.max(0, parseInt(np.value, 10) || 0); patch.new_per_day = deck.newPerDay; }
@@ -1102,16 +1227,41 @@
       if (res.error) dbError('die Einstellungen', res.error);
     });
 
-    // Buttons: Lernen / Plan / Karten / löschen
+    // Buttons: Lernen / Ordner lernen / Ordner auf-/zuklappen / Plan / Karten / löschen
     wrap.addEventListener('click', async function (e) {
       var studyBtn = e.target.closest('[data-study]');
+      var studyFolder = e.target.closest('[data-study-folder]');
+      var toggleFolder = e.target.closest('[data-toggle-folder]');
+      var delFolder = e.target.closest('[data-del-folder]');
       var togglePlan = e.target.closest('[data-toggle-plan]');
       var toggle = e.target.closest('[data-toggle-cards]');
       var delCard = e.target.closest('[data-del-card]');
       var delDeck = e.target.closest('[data-del-deck]');
 
       if (studyBtn) {
-        startStudy(studyBtn.dataset.study);
+        var sd = data.decks.filter(function (d) { return d.id === studyBtn.dataset.study; })[0];
+        startStudy([studyBtn.dataset.study], sd ? sd.name : '');
+      } else if (studyFolder) {
+        var fid = studyFolder.dataset.studyFolder;
+        var folder = data.folders.filter(function (f) { return f.id === fid; })[0];
+        var ids = data.decks.filter(function (d) { return d.folder_id === fid; }).map(function (d) { return d.id; });
+        startStudy(ids, folder ? '📁 ' + folder.name : '');
+      } else if (toggleFolder) {
+        var fdecks = document.getElementById('folderDecks-' + toggleFolder.dataset.toggleFolder);
+        var caret = toggleFolder.querySelector('.folder-caret');
+        if (fdecks) {
+          fdecks.hidden = !fdecks.hidden;
+          if (caret) caret.textContent = fdecks.hidden ? '▸' : '▾';
+        }
+      } else if (delFolder) {
+        var folId = delFolder.dataset.delFolder;
+        var fol = data.folders.filter(function (f) { return f.id === folId; })[0];
+        if (!confirm('Ordner „' + (fol ? fol.name : '') + '" löschen? Die Stapel darin bleiben erhalten (werden „Ohne Ordner").')) return;
+        var dres = await sb.from('folders').delete().eq('id', folId);
+        if (dres.error) return dbError('den Ordner', dres.error);
+        data.folders = data.folders.filter(function (f) { return f.id !== folId; });
+        data.decks.forEach(function (d) { if (d.folder_id === folId) d.folder_id = ''; });
+        renderDecks();
       } else if (togglePlan) {
         var pbox = document.getElementById('deckPlan-' + togglePlan.dataset.togglePlan);
         if (pbox) pbox.hidden = !pbox.hidden;
@@ -1140,22 +1290,28 @@
     wireStudy();
   }
 
-  // ---------- Lern-Modus mit FSRS ----------
-  var study = { deckId: null, queue: [], current: null, done: 0 };
+  // ---------- Lern-Modus mit FSRS (ein Stapel oder ganzer Ordner) ----------
+  // queue-Einträge sind { card, deck } — so kennt jede Karte ihren Stapel
+  // (für FSRS-Einstellungen), auch wenn ein Ordner mehrere Stapel mischt.
+  var study = { queue: [], current: null, currentDeck: null, done: 0, label: '' };
 
-  function currentDeck() { return data.decks.filter(function (d) { return d.id === study.deckId; })[0]; }
-
-  function startStudy(deckId) {
-    var deck = data.decks.filter(function (d) { return d.id === deckId; })[0];
-    if (!deck) return;
+  function startStudy(deckIds, label) {
+    if (!Array.isArray(deckIds)) deckIds = [deckIds];
     var today = todayStr();
-    study.deckId = deckId;
-    study.done = 0;
-    var dueReviews = deck.cards.filter(function (c) { return c.state !== 'new' && (c.due || today) <= today; });
-    var newCards = deck.cards.filter(function (c) { return c.state === 'new'; }).slice(0, deck.newPerDay || 0);
-    // Neue Karten unter die Wiederholungen mischen (etwas Interleaving im Stapel).
-    study.queue = shuffle(dueReviews.concat(newCards));
-    study.current = null;
+    var items = [];
+    deckIds.forEach(function (id) {
+      var deck = data.decks.filter(function (d) { return d.id === id; })[0];
+      if (!deck) return;
+      deck.cards.filter(function (c) { return c.state !== 'new' && (c.due || today) <= today; })
+        .forEach(function (c) { items.push({ card: c, deck: deck }); });
+      deck.cards.filter(function (c) { return c.state === 'new'; }).slice(0, deck.newPerDay || 0)
+        .forEach(function (c) { items.push({ card: c, deck: deck }); });
+    });
+    if (!items.length) return;
+    // Mischen — auch stapelübergreifend (Interleaving beim Ordner-Lernen).
+    study.queue = shuffle(items);
+    study.current = null; study.currentDeck = null; study.done = 0;
+    study.label = label || '';
     document.getElementById('studyDone').hidden = true;
     document.getElementById('studyOverlay').hidden = false;
     document.body.classList.add('modal-open');
@@ -1165,7 +1321,7 @@
   function closeStudy() {
     document.getElementById('studyOverlay').hidden = true;
     document.body.classList.remove('modal-open');
-    study.deckId = null; study.queue = []; study.current = null;
+    study.queue = []; study.current = null; study.currentDeck = null;
     renderDecks(); updateOverview();
   }
 
@@ -1173,7 +1329,7 @@
     var box = document.getElementById('flashcard');
     var actions = document.querySelector('.study-actions');
     if (!study.queue.length) {
-      study.current = null;
+      study.current = null; study.currentDeck = null;
       box.parentElement.hidden = true;
       actions.hidden = true;
       document.getElementById('studyProgress').textContent = 'fertig';
@@ -1182,15 +1338,18 @@
     }
     box.parentElement.hidden = false;
     actions.hidden = false;
-    study.current = study.queue.shift();
+    var item = study.queue.shift();
+    study.current = item.card;
+    study.currentDeck = item.deck;
     document.getElementById('fcFront').innerHTML = esc(study.current.front);
     document.getElementById('fcBack').innerHTML = esc(study.current.back);
     document.getElementById('fcBack').hidden = true;
     document.getElementById('fcDivider').hidden = true;
     document.getElementById('fcShow').hidden = false;
     document.getElementById('fcRate').hidden = true;
-    document.getElementById('studyProgress').textContent = (study.queue.length + 1) + ' übrig' +
-      (study.done ? ' · ' + study.done + ' gelernt' : '');
+    document.getElementById('studyProgress').textContent =
+      (study.label ? study.label + ' · ' : '') +
+      (study.queue.length + 1) + ' übrig' + (study.done ? ' · ' + study.done + ' gelernt' : '');
   }
 
   function revealAnswer() {
@@ -1199,7 +1358,7 @@
     document.getElementById('fcShow').hidden = true;
     document.getElementById('fcRate').hidden = false;
     // Transparenz: für jede Bewertung das resultierende Intervall anzeigen.
-    var deck = currentDeck(), card = study.current;
+    var deck = study.currentDeck, card = study.current;
     if (deck && card) {
       var map = { again: 1, hard: 2, good: 3, easy: 4 };
       Object.keys(map).forEach(function (k) {
@@ -1212,7 +1371,7 @@
 
   async function rateCard(rating) {
     var card = study.current;
-    var deck = currentDeck();
+    var deck = study.currentDeck;
     if (!card || !deck) return;
     var g = { again: 1, hard: 2, good: 3, easy: 4 }[rating];
     var r = fsrsCompute(card, deck, g);
@@ -1224,7 +1383,7 @@
     if (g === 1) card.lapses = (card.lapses || 0) + 1;
     card.due = r.due;
     study.done++;
-    if (r.requeue) study.queue.push(card); // in dieser Sitzung erneut zeigen
+    if (r.requeue) study.queue.push({ card: card, deck: deck }); // in dieser Sitzung erneut zeigen
     nextCard();
     var res = await sb.from('cards').update({
       state: card.state, difficulty: card.difficulty, stability: card.stability,

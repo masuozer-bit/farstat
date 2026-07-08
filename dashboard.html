@@ -33,7 +33,7 @@
       <button class="side-link active" data-panel="overview"><span class="ico">▣</span> Übersicht</button>
       <button class="side-link" data-panel="kalender"><span class="ico">▤</span> Terminkalender</button>
       <button class="side-link" data-panel="lernplan"><span class="ico">✓</span> Lernplan</button>
-      <button class="side-link" data-panel="karteikarten"><span class="ico">🂠</span> Karteikarten</button>
+      <button class="side-link" data-panel="karteikarten"><span class="ico">🂠</span> Karteikarten<span class="side-badge" id="fcBadge" hidden>0</span></button>
       <button class="side-link" data-panel="dokumente"><span class="ico">▢</span> Dokumente</button>
       <button class="side-link" data-panel="nachrichten"><span class="ico">✉</span> Nachrichten</button>
       <a class="side-link" href="index.html" style="margin-top:auto"><span class="ico">←</span> Zur Website</a>
@@ -161,8 +161,15 @@
       <section class="panel" id="panel-karteikarten">
         <div class="panel-head">
           <h2>Karteikarten</h2>
-          <p>Lege Stapel an, schreibe Karten und lerne sie mit Wiederholung im Abstand (wie bei Anki).</p>
+          <p>Lege Stapel an, sortiere sie in Ordner und lerne mit Wiederholung im Abstand (wie bei Anki).</p>
         </div>
+
+        <div class="fc-summary" id="fcSummary"></div>
+
+        <form class="add-row" id="folderForm">
+          <input type="text" id="folderName" class="grow" placeholder="Neuer Ordner, z. B. Semester 1" required />
+          <button type="submit" class="btn btn-ghost">Ordner anlegen</button>
+        </form>
 
         <form class="add-row" id="deckForm">
           <input type="text" id="deckName" class="grow" placeholder="Neuer Stapel, z. B. Formeln Modul 2" required />

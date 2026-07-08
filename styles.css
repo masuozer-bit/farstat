@@ -429,6 +429,31 @@ a.d-dl { color: var(--primary); font-weight: 600; font-size: 0.9rem; }
    Bewertungs-Buttons trotz hidden angezeigt. */
 [hidden] { display: none !important; }
 
+/* Übersicht/Score-Leiste */
+.fc-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 22px; }
+.fc-summary:empty { display: none; }
+.stat-tile { border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; background: var(--surface); }
+.stat-num { font-family: var(--font-head); font-size: 1.5rem; color: var(--ink); line-height: 1.1; }
+.stat-label { font-size: 0.78rem; color: var(--muted); }
+.stat-score { background: var(--primary-soft); border-color: transparent; }
+.stat-score .stat-num { color: var(--primary-dark); }
+.stat-bar { margin-top: 8px; height: 6px; border-radius: 999px; background: rgba(37, 114, 103, 0.18); overflow: hidden; }
+.stat-bar-fill { display: block; height: 100%; background: var(--primary); border-radius: 999px; }
+
+/* Badge in der Seitenleiste */
+.side-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; margin-left: auto; border-radius: 999px; background: var(--primary); color: #fff; font-size: 0.72rem; font-weight: 700; }
+
+/* Ordner */
+.folder { border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 18px; overflow: hidden; }
+.folder-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 18px; background: var(--surface-2); }
+.folder-toggle { display: inline-flex; align-items: center; gap: 8px; background: none; border: none; cursor: pointer; font-family: var(--font-head); font-size: 1.1rem; color: var(--ink); padding: 0; }
+.folder-caret { color: var(--muted); font-size: 0.85rem; }
+.folder-meta { color: var(--muted); font-size: 0.88rem; }
+.folder-btns { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.folder-decks { padding: 16px 18px 4px; }
+.folder-decks .deck { background: var(--surface); }
+.loose-head { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); font-weight: 600; margin: 6px 0 12px; }
+
 .deck { border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 22px; margin-bottom: 16px; }
 .deck-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
 .deck-title h3 { font-size: 1.15rem; }
@@ -528,4 +553,6 @@ body.modal-open { overflow: hidden; }
   .msg { max-width: 88%; }
   .deck-head { flex-direction: column; align-items: flex-start; }
   .fc-rate { grid-template-columns: repeat(2, 1fr); }
+  .fc-summary { grid-template-columns: repeat(2, 1fr); }
+  .folder-btns { margin-left: 0; }
 }
