@@ -33,6 +33,7 @@
       <button class="side-link active" data-panel="overview"><span class="ico">▣</span> Übersicht</button>
       <button class="side-link" data-panel="kalender"><span class="ico">▤</span> Terminkalender</button>
       <button class="side-link" data-panel="lernplan"><span class="ico">✓</span> Lernplan</button>
+      <button class="side-link" data-panel="karteikarten"><span class="ico">🂠</span> Karteikarten</button>
       <button class="side-link" data-panel="dokumente"><span class="ico">▢</span> Dokumente</button>
       <button class="side-link" data-panel="nachrichten"><span class="ico">✉</span> Nachrichten</button>
       <a class="side-link" href="index.html" style="margin-top:auto"><span class="ico">←</span> Zur Website</a>
@@ -56,6 +57,11 @@
             <div class="ov-ico">✓</div>
             <h3>Lernplan</h3>
             <p><span id="ovTasks">0</span> offene Aufgaben</p>
+          </button>
+          <button class="ov-card" data-open="karteikarten">
+            <div class="ov-ico">🂠</div>
+            <h3>Karteikarten</h3>
+            <p><span id="ovDue">0</span> Karten fällig</p>
           </button>
           <button class="ov-card" data-open="dokumente">
             <div class="ov-ico">▢</div>
@@ -150,6 +156,53 @@
 
         <div id="planList"></div>
       </section>
+
+      <!-- Karteikarten -->
+      <section class="panel" id="panel-karteikarten">
+        <div class="panel-head">
+          <h2>Karteikarten</h2>
+          <p>Lege Stapel an, schreibe Karten und lerne sie mit Wiederholung im Abstand (wie bei Anki).</p>
+        </div>
+
+        <form class="add-row" id="deckForm">
+          <input type="text" id="deckName" class="grow" placeholder="Neuer Stapel, z. B. Formeln Modul 2" required />
+          <button type="submit" class="btn btn-primary">Stapel anlegen</button>
+        </form>
+
+        <div id="deckList"></div>
+      </section>
+
+      <!-- Lern-Overlay (Karteikarten üben) -->
+      <div class="study-overlay" id="studyOverlay" hidden>
+        <div class="study-box">
+          <div class="study-top">
+            <span class="study-progress" id="studyProgress">0 fällig</span>
+            <button class="icon-btn" id="studyClose" title="Schließen">✕</button>
+          </div>
+          <div class="study-body">
+            <div class="flashcard" id="flashcard">
+              <div class="fc-side fc-front" id="fcFront"></div>
+              <div class="fc-divider" id="fcDivider" hidden></div>
+              <div class="fc-side fc-back" id="fcBack" hidden></div>
+            </div>
+          </div>
+          <div class="study-actions">
+            <button class="btn btn-primary study-show" id="fcShow">Antwort zeigen</button>
+            <div class="fc-rate" id="fcRate" hidden>
+              <button class="btn fc-again" data-rate="again">Nochmal</button>
+              <button class="btn fc-hard"  data-rate="hard">Schwer</button>
+              <button class="btn fc-good"  data-rate="good">Gut</button>
+              <button class="btn fc-easy"  data-rate="easy">Leicht</button>
+            </div>
+          </div>
+          <div class="study-done" id="studyDone" hidden>
+            <p class="study-done-mark">✓</p>
+            <h3>Geschafft!</h3>
+            <p class="empty-note">Für heute sind alle fälligen Karten dieses Stapels gelernt.</p>
+            <button class="btn btn-primary" id="studyFinish">Fertig</button>
+          </div>
+        </div>
+      </div>
 
       <!-- Dokumente -->
       <section class="panel" id="panel-dokumente">

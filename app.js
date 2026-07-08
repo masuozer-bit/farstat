@@ -205,7 +205,7 @@
   if (!appShell) return; // keine Dashboard-Seite -> fertig
 
   var user = null;
-  var data = { termine: [], plan: [], docs: [], avail: [], materials: [] };
+  var data = { termine: [], plan: [], docs: [], avail: [], materials: [], decks: [] };
 
   (async function initDashboard() {
     if (!sb) { window.location.href = 'anmelden.html'; return; }
@@ -242,13 +242,14 @@
     wireTermine();
     wireAvail();
     wirePlan();
+    wireDecks();
     wireDocs();
     wireNotifications();
     initChat(user.id);
 
     await loadAll();
     renderCalendar(); renderTermine(); renderProposals(); renderCancelled(); renderAvail();
-    renderPlan(); renderDocs(); renderMaterials(); updateOverview();
+    renderPlan(); renderDecks(); renderDocs(); renderMaterials(); updateOverview();
     loadNotifications(user.id);
   })();
 
@@ -285,6 +286,19 @@
     var mat = await sb.from('materials').select('id,name,size,type,storage_path,created_at').order('created_at', { ascending: false });
     data.materials = (mat.data || []).map(function (r) {
       return { id: r.id, name: r.name, size: r.size, type: r.type, date: r.created_at, path: r.storage_path };
+    });
+
+    var decks = await sb.from('decks').select('id,name,created_at').order('created_at', { ascending: true });
+    var cards = await sb.from('cards').select('id,deck_id,front,back,due,interval,ease,reps,created_at').order('created_at', { ascending: true });
+    var byDeck = {};
+    (cards.data || []).forEach(function (c) {
+      (byDeck[c.deck_id] = byDeck[c.deck_id] || []).push({
+        id: c.id, front: c.front, back: c.back,
+        due: c.due, interval: c.interval, ease: c.ease, reps: c.reps
+      });
+    });
+    data.decks = (decks.data || []).map(function (d) {
+      return { id: d.id, name: d.name, cards: byDeck[d.id] || [] };
     });
   }
 
@@ -333,8 +347,10 @@
     var openTasks = data.plan.reduce(function (n, l) {
       return n + l.tasks.filter(function (t) { return !t.done; }).length;
     }, 0);
+    var dueCards = data.decks.reduce(function (n, d) { return n + dueCount(d); }, 0);
     setText('ovTermine', upcoming);
     setText('ovTasks', openTasks);
+    setText('ovDue', dueCards);
     setText('ovDocs', data.docs.length);
   }
   function setText(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
@@ -813,6 +829,248 @@
         if (res2.error) return dbError('die Liste', res2.error);
         data.plan = data.plan.filter(function (l) { return l.id !== listId; });
         renderPlan(); updateOverview();
+      }
+    });
+  }
+
+  // =====================================================================
+  // KARTEIKARTEN (Anki-artig: Stapel, Karten, Wiederholung im Abstand)
+  // =====================================================================
+
+  // Wie viele Karten eines Stapels sind heute (oder überfällig) dran?
+  function dueCount(deck) {
+    var today = todayStr();
+    return deck.cards.filter(function (c) { return (c.due || today) <= today; }).length;
+  }
+
+  function renderDecks() {
+    var wrap = document.getElementById('deckList');
+    if (!wrap) return;
+    if (!data.decks.length) {
+      wrap.innerHTML = '<p class="empty-note">Noch keine Stapel. Lege oben deinen ersten an.</p>';
+      return;
+    }
+    wrap.innerHTML = data.decks.map(function (d) {
+      var due = dueCount(d);
+      var total = d.cards.length;
+      var cardsHtml = d.cards.map(function (c) {
+        return '<div class="fc-row">' +
+          '<span class="fc-q"><strong>' + esc(c.front) + '</strong><small>' + esc(c.back) + '</small></span>' +
+          '<button class="icon-btn" data-del-card="' + d.id + '|' + c.id + '" title="Karte löschen">✕</button></div>';
+      }).join('');
+      return '<div class="deck">' +
+        '<div class="deck-head">' +
+          '<div class="deck-title"><h3>' + esc(d.name) + '</h3>' +
+            '<span class="deck-meta">' + total + ' Karte' + (total === 1 ? '' : 'n') +
+            (due ? ' · <span class="deck-due">' + due + ' fällig</span>' : ' · alles gelernt') + '</span></div>' +
+          '<div class="deck-btns">' +
+            '<button class="btn btn-primary btn-sm" data-study="' + d.id + '"' + (due ? '' : ' disabled') + '>Lernen' + (due ? ' (' + due + ')' : '') + '</button>' +
+            '<button class="btn btn-ghost btn-sm" data-toggle-cards="' + d.id + '">Karten</button>' +
+            '<button class="icon-btn" data-del-deck="' + d.id + '" title="Stapel löschen">🗑</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="deck-cards" id="deckCards-' + d.id + '" hidden>' +
+          '<form class="fc-add" data-add-card="' + d.id + '">' +
+            '<input type="text" name="front" placeholder="Vorderseite (Frage)" required />' +
+            '<input type="text" name="back" placeholder="Rückseite (Antwort)" required />' +
+            '<button type="submit" class="btn btn-ghost btn-sm">+ Karte</button>' +
+          '</form>' +
+          (total ? cardsHtml : '<p class="empty-note">Noch keine Karten in diesem Stapel.</p>') +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function wireDecks() {
+    var deckForm = document.getElementById('deckForm');
+    if (!deckForm) return;
+
+    deckForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var name = val('deckName').trim();
+      if (!name) return;
+      var res = await sb.from('decks').insert({ name: name }).select('id,name').single();
+      if (res.error) return dbError('den Stapel', res.error);
+      data.decks.push({ id: res.data.id, name: res.data.name, cards: [] });
+      deckForm.reset(); renderDecks(); updateOverview();
+    });
+
+    var wrap = document.getElementById('deckList');
+
+    // Karte hinzufügen
+    wrap.addEventListener('submit', async function (e) {
+      var form = e.target.closest('[data-add-card]');
+      if (!form) return;
+      e.preventDefault();
+      var deckId = form.dataset.addCard;
+      var front = form.front.value.trim();
+      var back = form.back.value.trim();
+      if (!front || !back) return;
+      var res = await sb.from('cards')
+        .insert({ deck_id: deckId, front: front, back: back })
+        .select('id,front,back,due,interval,ease,reps').single();
+      if (res.error) return dbError('die Karte', res.error);
+      var deck = data.decks.filter(function (d) { return d.id === deckId; })[0];
+      if (deck) {
+        var c = res.data;
+        deck.cards.push({ id: c.id, front: c.front, back: c.back, due: c.due, interval: c.interval, ease: c.ease, reps: c.reps });
+        renderDecks(); updateOverview();
+        // Karten-Ansicht offen halten und Fokus zurück ins Frage-Feld
+        var open = document.getElementById('deckCards-' + deckId);
+        if (open) { open.hidden = false; var fi = open.querySelector('input[name=front]'); if (fi) fi.focus(); }
+      }
+    });
+
+    // Buttons: Lernen / Karten anzeigen / löschen
+    wrap.addEventListener('click', async function (e) {
+      var study = e.target.closest('[data-study]');
+      var toggle = e.target.closest('[data-toggle-cards]');
+      var delCard = e.target.closest('[data-del-card]');
+      var delDeck = e.target.closest('[data-del-deck]');
+
+      if (study) {
+        startStudy(study.dataset.study);
+      } else if (toggle) {
+        var box = document.getElementById('deckCards-' + toggle.dataset.toggleCards);
+        if (box) box.hidden = !box.hidden;
+      } else if (delCard) {
+        var ids = delCard.dataset.delCard.split('|');
+        var res = await sb.from('cards').delete().eq('id', ids[1]);
+        if (res.error) return dbError('die Karte', res.error);
+        var deck = data.decks.filter(function (d) { return d.id === ids[0]; })[0];
+        if (deck) { deck.cards = deck.cards.filter(function (c) { return c.id !== ids[1]; }); }
+        renderDecks(); updateOverview();
+      } else if (delDeck) {
+        var deckId = delDeck.dataset.delDeck;
+        var deck2 = data.decks.filter(function (d) { return d.id === deckId; })[0];
+        var label = deck2 ? deck2.name : 'diesen Stapel';
+        if (!confirm('Stapel „' + label + '" mit allen Karten löschen?')) return;
+        var res2 = await sb.from('decks').delete().eq('id', deckId);
+        if (res2.error) return dbError('den Stapel', res2.error);
+        data.decks = data.decks.filter(function (d) { return d.id !== deckId; });
+        renderDecks(); updateOverview();
+      }
+    });
+
+    wireStudy();
+  }
+
+  // ---------- Lern-Modus mit Wiederholung im Abstand (vereinfachtes SM-2) ----------
+  var study = { deckId: null, queue: [], current: null };
+
+  function startStudy(deckId) {
+    var deck = data.decks.filter(function (d) { return d.id === deckId; })[0];
+    if (!deck) return;
+    var today = todayStr();
+    study.deckId = deckId;
+    // Alle heute fälligen Karten in die Warteschlange (in ursprünglicher Reihenfolge).
+    study.queue = deck.cards.filter(function (c) { return (c.due || today) <= today; }).slice();
+    study.current = null;
+    document.getElementById('studyDone').hidden = true;
+    document.getElementById('studyOverlay').hidden = false;
+    document.body.classList.add('modal-open');
+    nextCard();
+  }
+
+  function closeStudy() {
+    document.getElementById('studyOverlay').hidden = true;
+    document.body.classList.remove('modal-open');
+    study.deckId = null; study.queue = []; study.current = null;
+    renderDecks(); updateOverview();
+  }
+
+  function nextCard() {
+    var box = document.getElementById('flashcard');
+    var actions = document.querySelector('.study-actions');
+    if (!study.queue.length) {
+      study.current = null;
+      box.parentElement.hidden = true;
+      actions.hidden = true;
+      document.getElementById('studyProgress').textContent = 'fertig';
+      document.getElementById('studyDone').hidden = false;
+      return;
+    }
+    box.parentElement.hidden = false;
+    actions.hidden = false;
+    study.current = study.queue.shift();
+    document.getElementById('fcFront').innerHTML = esc(study.current.front);
+    document.getElementById('fcBack').innerHTML = esc(study.current.back);
+    document.getElementById('fcBack').hidden = true;
+    document.getElementById('fcDivider').hidden = true;
+    document.getElementById('fcShow').hidden = false;
+    document.getElementById('fcRate').hidden = true;
+    document.getElementById('studyProgress').textContent = (study.queue.length + 1) + ' übrig';
+  }
+
+  function revealAnswer() {
+    document.getElementById('fcBack').hidden = false;
+    document.getElementById('fcDivider').hidden = false;
+    document.getElementById('fcShow').hidden = true;
+    document.getElementById('fcRate').hidden = false;
+  }
+
+  // Neue Planung nach Bewertung berechnen (Intervalle in Tagen).
+  function schedule(card, rating) {
+    var ease = card.ease || 2.5;
+    var interval = card.interval || 0;
+    var requeue = false;
+    if (rating === 'again') {
+      ease = Math.max(1.3, ease - 0.2);
+      interval = 0;
+      requeue = true;                       // in dieser Sitzung erneut zeigen
+    } else if (rating === 'hard') {
+      ease = Math.max(1.3, ease - 0.15);
+      interval = interval < 1 ? 1 : Math.ceil(interval * 1.2);
+    } else if (rating === 'good') {
+      interval = interval < 1 ? 1 : Math.ceil(interval * ease);
+    } else { // easy
+      ease = ease + 0.15;
+      interval = interval < 1 ? 3 : Math.ceil(interval * ease * 1.3);
+    }
+    card.ease = Math.round(ease * 100) / 100;
+    card.interval = interval;
+    card.reps = (card.reps || 0) + 1;
+    card.due = requeue ? todayStr() : addDays(todayStr(), interval);
+    return requeue;
+  }
+
+  async function rateCard(rating) {
+    var card = study.current;
+    if (!card) return;
+    var requeue = schedule(card, rating);
+    // Bei „Nochmal" ans Ende der aktuellen Sitzung hängen.
+    if (requeue) study.queue.push(card);
+    nextCard();
+    // Persistenz im Hintergrund; Fehler nur protokollieren, Lernfluss nicht stören.
+    var res = await sb.from('cards')
+      .update({ due: card.due, interval: card.interval, ease: card.ease, reps: card.reps })
+      .eq('id', card.id);
+    if (res.error) console.error('Karten-Fortschritt speichern', res.error);
+  }
+
+  function wireStudy() {
+    var overlay = document.getElementById('studyOverlay');
+    if (!overlay) return;
+    document.getElementById('fcShow').addEventListener('click', revealAnswer);
+    document.getElementById('studyClose').addEventListener('click', closeStudy);
+    document.getElementById('studyFinish').addEventListener('click', closeStudy);
+    document.getElementById('fcRate').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-rate]');
+      if (b) rateCard(b.dataset.rate);
+    });
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) closeStudy(); });
+    // Tastatur: Leertaste = Antwort zeigen, 1–4 = bewerten, Esc = schließen.
+    document.addEventListener('keydown', function (e) {
+      if (overlay.hidden) return;
+      if (e.key === 'Escape') { closeStudy(); return; }
+      var rating = document.getElementById('fcRate');
+      if (!rating.hidden) {
+        if (e.key === '1') rateCard('again');
+        else if (e.key === '2') rateCard('hard');
+        else if (e.key === '3') rateCard('good');
+        else if (e.key === '4') rateCard('easy');
+      } else if (e.key === ' ' || e.key === 'Enter') {
+        if (!document.getElementById('fcShow').hidden) { e.preventDefault(); revealAnswer(); }
       }
     });
   }
