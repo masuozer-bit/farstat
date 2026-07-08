@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Studiumm — Statistik-Nachhilfe für Psychologie</title>
+  <meta name="description" content="Persönliche Nachhilfe in Statistik für Bachelor- und Master-Studierende der Psychologie." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand"><span class="brand-mark">σ</span><span class="brand-name">Studiumm</span></a>
+      <nav class="nav">
+        <a href="module.html">Module</a>
+        <a href="ueber.html">Über</a>
+        <a href="preise.html">Preise</a>
+        <a href="kontakt.html">Kontakt</a>
+        <a href="anmelden.html" class="nav-cta">Anmelden</a>
+      </nav>
+      <button class="nav-toggle" aria-label="Menü" aria-expanded="false" aria-controls="mobile-nav"><span></span><span></span><span></span></button>
+    </div>
+    <nav class="mobile-nav" id="mobile-nav">
+      <a href="module.html">Module</a>
+      <a href="ueber.html">Über</a>
+      <a href="preise.html">Preise</a>
+      <a href="kontakt.html">Kontakt</a>
+      <a href="anmelden.html">Anmelden</a>
+    </nav>
+  </header>
+
+  <main class="hero">
+    <div class="container">
+      <span class="eyebrow" data-cms="index.hero.eyebrow">Statistik-Nachhilfe für Psychologie</span>
+      <h1 data-cms-html="index.hero.title">Statistik endlich <em>verstehen</em>.</h1>
+      <p data-cms="index.hero.text">Persönliche Unterstützung in den Statistikmodulen — Bachelor &amp; Master.</p>
+      <div class="hero-actions">
+        <a href="kontakt.html" class="btn btn-primary" data-cms="index.hero.cta1">Erstgespräch</a>
+        <a href="module.html" class="btn btn-ghost" data-cms="index.hero.cta2">Module ansehen</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>© <span id="year"></span> Studiumm</span>
+      <nav>
+        <a href="kontakt.html">Kontakt</a>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="content.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

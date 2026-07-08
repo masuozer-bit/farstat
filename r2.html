@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>R-Kurs 2 — R für Fortgeschrittene — Studiumm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand"><span class="brand-mark">σ</span><span class="brand-name">Studiumm</span></a>
+      <nav class="nav">
+        <a href="module.html" class="active">Module</a>
+        <a href="ueber.html">Über</a>
+        <a href="preise.html">Preise</a>
+        <a href="kontakt.html">Kontakt</a>
+        <a href="anmelden.html" class="nav-cta">Anmelden</a>
+      </nav>
+      <button class="nav-toggle" aria-label="Menü" aria-expanded="false" aria-controls="mobile-nav"><span></span><span></span><span></span></button>
+    </div>
+    <nav class="mobile-nav" id="mobile-nav">
+      <a href="module.html">Module</a>
+      <a href="ueber.html">Über</a>
+      <a href="preise.html">Preise</a>
+      <a href="kontakt.html">Kontakt</a>
+      <a href="anmelden.html">Anmelden</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <div class="container">
+      <a href="module.html" class="back-link">← Alle Module</a>
+
+      <div class="detail-head">
+        <span class="detail-tag" data-cms="r2.tag">Master · R-Kurs 2</span>
+        <h1 data-cms="r2.title">R für Fortgeschrittene</h1>
+        <p class="detail-tagline" data-cms="r2.tagline">Multivariate Verfahren sicher in R umsetzen und auswerten</p>
+      </div>
+
+      <p class="detail-lead" data-cms="r2.lead">Aufbauend auf den R-Grundlagen setzt du hier die multivariaten Verfahren des Masters sicher um — von der Datenaufbereitung über Modellschätzung bis zur sauberen Ergebnisberichterstattung.</p>
+
+      <div class="detail-section">
+        <h2 data-cms="r2.themen_head">Themen u. a.</h2>
+        <ul>
+          <li data-cms="r2.li1">Datenaufbereitung &amp; Umgang mit fehlenden Werten</li>
+          <li data-cms="r2.li2">Multiple Regression, Mediation &amp; Moderation in R</li>
+          <li data-cms="r2.li3">Mehrebenenanalyse mit lme4</li>
+          <li data-cms="r2.li4">Strukturgleichungsmodelle mit lavaan</li>
+          <li data-cms="r2.li5">Messwiederholung &amp; Meta-Analyse</li>
+          <li data-cms="r2.li6">Ergebnisberichte mit R Markdown</li>
+        </ul>
+      </div>
+
+      <div class="detail-cta">
+        <a href="kontakt.html" class="btn btn-primary" data-cms="r2.cta">Unterstützung anfragen</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>© <span id="year"></span> Studiumm</span>
+      <nav>
+        <a href="kontakt.html">Kontakt</a>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="content.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

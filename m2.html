@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modul 2 — Statistik — Studiumm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand"><span class="brand-mark">σ</span><span class="brand-name">Studiumm</span></a>
+      <nav class="nav">
+        <a href="module.html" class="active">Module</a>
+        <a href="ueber.html">Über</a>
+        <a href="preise.html">Preise</a>
+        <a href="kontakt.html">Kontakt</a>
+        <a href="anmelden.html" class="nav-cta">Anmelden</a>
+      </nav>
+      <button class="nav-toggle" aria-label="Menü" aria-expanded="false" aria-controls="mobile-nav"><span></span><span></span><span></span></button>
+    </div>
+    <nav class="mobile-nav" id="mobile-nav">
+      <a href="module.html">Module</a>
+      <a href="ueber.html">Über</a>
+      <a href="preise.html">Preise</a>
+      <a href="kontakt.html">Kontakt</a>
+      <a href="anmelden.html">Anmelden</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <div class="container">
+      <a href="module.html" class="back-link">← Alle Module</a>
+
+      <div class="detail-head">
+        <span class="detail-tag" data-cms="m2.tag">Bachelor · Modul 2</span>
+        <h1 data-cms="m2.title">Statistik</h1>
+        <p class="detail-tagline" data-cms="m2.tagline">Empirische Sozialforschung, deskriptive &amp; Inferenzstatistik — mit SPSS</p>
+      </div>
+
+      <p class="detail-lead" data-cms="m2.lead">Wir bringen dich sicher durch das Statistik-Pflichtmodul: von den Grundlagen empirischer Forschung über die beschreibende Statistik bis zur schließenden Statistik — verständlich erklärt und Schritt für Schritt in SPSS umgesetzt.</p>
+
+      <div class="detail-section">
+        <h2 data-cms="m2.themen_head">Themen u. a.</h2>
+        <ul>
+          <li data-cms="m2.li1">Forschungsmethoden, Skalenniveaus &amp; Gütekriterien</li>
+          <li data-cms="m2.li2">Deskriptivstatistik: Lage, Streuung, Korrelation</li>
+          <li data-cms="m2.li3">Wahrscheinlichkeit &amp; Logik des Signifikanztests</li>
+          <li data-cms="m2.li4">t-Test, Varianzanalyse, Regression, Chi-Quadrat</li>
+          <li data-cms="m2.li5">Effektgrößen &amp; Teststärke</li>
+          <li data-cms="m2.li6">Auswertung in SPSS</li>
+        </ul>
+      </div>
+
+      <div class="detail-cta">
+        <a href="kontakt.html" class="btn btn-primary" data-cms="m2.cta">Unterstützung anfragen</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>© <span id="year"></span> Studiumm</span>
+      <nav>
+        <a href="kontakt.html">Kontakt</a>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="content.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

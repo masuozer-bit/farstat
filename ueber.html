@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Über — Studiumm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand"><span class="brand-mark">σ</span><span class="brand-name">Studiumm</span></a>
+      <nav class="nav">
+        <a href="module.html">Module</a>
+        <a href="ueber.html" class="active">Über</a>
+        <a href="preise.html">Preise</a>
+        <a href="kontakt.html">Kontakt</a>
+        <a href="anmelden.html" class="nav-cta">Anmelden</a>
+      </nav>
+      <button class="nav-toggle" aria-label="Menü" aria-expanded="false" aria-controls="mobile-nav"><span></span><span></span><span></span></button>
+    </div>
+    <nav class="mobile-nav" id="mobile-nav">
+      <a href="module.html">Module</a>
+      <a href="ueber.html">Über</a>
+      <a href="preise.html">Preise</a>
+      <a href="kontakt.html">Kontakt</a>
+      <a href="anmelden.html">Anmelden</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <div class="container">
+      <div class="page-head">
+        <span class="eyebrow" data-cms="ueber.eyebrow">Über mich</span>
+        <h1 data-cms="ueber.title">Hallo!</h1>
+      </div>
+
+      <div class="about">
+        <div class="about-photo"><span data-cms="ueber.photo_label">Dein Foto</span></div>
+        <div class="about-text">
+          <p data-cms-html="ueber.text1">Hi, ich bin <span class="placeholder">[Dein Name]</span> — und ich liebe es, Statistik so zu erklären, dass es endlich Klick macht.</p>
+          <p data-cms="ueber.text2">Die Statistik- und Methodenmodule meines Psychologiestudiums habe ich mit sehr guten Noten abgeschlossen. In einem Forschungspraktikum durfte ich dieses Wissen direkt anwenden: Ich habe mit echten Daten gearbeitet und meine Auswertungen besonders intensiv mit R vertieft.</p>
+          <p data-cms="ueber.text3">Genau diese Mischung aus solider Theorie und echter Praxis gebe ich an dich weiter — geduldig, auf Augenhöhe und mit vielen Beispielen aus dem Studienalltag. Keine Frage ist zu klein, kein Thema zu kompliziert.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>© <span id="year"></span> Studiumm</span>
+      <nav>
+        <a href="kontakt.html">Kontakt</a>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="content.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

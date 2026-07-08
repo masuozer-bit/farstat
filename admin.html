@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Studiumm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .admin-badge {
+      display: inline-block; vertical-align: middle;
+      font-family: var(--font-body); font-size: 0.66rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--primary-dark); background: var(--primary-soft);
+      border-radius: 999px; padding: 2px 8px; margin-left: 6px;
+    }
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+    .admin-table th {
+      text-align: left; font-weight: 600; color: var(--muted);
+      font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em;
+      padding: 10px 12px; border-bottom: 1px solid var(--line);
+    }
+    .admin-table td { padding: 12px; border-bottom: 1px solid var(--line); color: var(--ink); }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table tbody tr { cursor: pointer; }
+    .admin-table tbody tr:hover { background: var(--surface-2); }
+    .cms-field { margin-bottom: 16px; }
+    .cms-field label {
+      display: block; font-size: 0.74rem; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;
+    }
+    .cms-field textarea {
+      width: 100%; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 10px;
+      font-family: inherit; font-size: 0.95rem; color: var(--ink); background: var(--surface); resize: vertical;
+    }
+    .cms-field textarea:focus { outline: none; border-color: var(--primary); }
+  </style>
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="container header-inner">
+      <a href="admin.html" class="brand"><span class="brand-mark">σ</span><span class="brand-name">Studiumm</span> <span class="admin-badge">Admin</span></a>
+      <div class="app-user">
+        <div class="notif-wrap">
+          <button class="notif-bell" id="notifBell" aria-label="Benachrichtigungen">🔔<span class="notif-count" id="notifCount" hidden>0</span></button>
+          <div class="notif-menu" id="notifMenu" hidden>
+            <div class="notif-head">Benachrichtigungen</div>
+            <div id="notifList"><p class="empty-note">Noch nichts Neues.</p></div>
+          </div>
+        </div>
+        <span class="who" id="whoami">Admin</span>
+        <button class="btn btn-ghost btn-sm" id="logoutBtn">Abmelden</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="app" id="adminShell">
+    <aside class="app-side">
+      <button class="side-link active" data-panel="overview"><span class="ico">▣</span> Übersicht</button>
+      <button class="side-link" data-panel="schueler"><span class="ico">☺</span> Schüler</button>
+      <button class="side-link" data-panel="kalender"><span class="ico">▤</span> Kalender</button>
+      <button class="side-link" data-panel="verfuegbar"><span class="ico">◷</span> Verfügbarkeiten</button>
+      <button class="side-link" data-panel="gruppen"><span class="ico">⬡</span> Lerngruppen</button>
+      <button class="side-link" data-panel="materialien"><span class="ico">▢</span> Materialien</button>
+      <button class="side-link" data-panel="chat"><span class="ico">✉</span> Nachrichten</button>
+      <button class="side-link" data-panel="inhalte"><span class="ico">✎</span> Inhalte</button>
+      <a class="side-link" href="dashboard.html"><span class="ico">▤</span> Mein Bereich</a>
+      <a class="side-link" href="index.html" style="margin-top:auto"><span class="ico">←</span> Zur Website</a>
+    </aside>
+
+    <main class="app-main">
+
+      <!-- Übersicht -->
+      <section class="panel active" id="panel-overview">
+        <div class="panel-head">
+          <h2 id="greeting">Admin-Bereich</h2>
+          <p>Verwalte Schüler, Termine und Materialien.</p>
+        </div>
+        <div class="ov-grid">
+          <button class="ov-card" data-open="schueler">
+            <div class="ov-ico">☺</div>
+            <h3>Schüler</h3>
+            <p><span id="ovStudents">0</span> registriert</p>
+          </button>
+        </div>
+      </section>
+
+      <!-- Schüler -->
+      <section class="panel" id="panel-schueler">
+        <div class="panel-head">
+          <h2>Schüler</h2>
+          <p>Alle registrierten Konten. Klicke einen Schüler, um seine Daten zu sehen.</p>
+        </div>
+        <div id="studentListWrap">
+          <div class="list-head">Registrierungen</div>
+          <div id="studentList"><p class="empty-note">Lädt …</p></div>
+        </div>
+        <div id="studentDetail" hidden></div>
+      </section>
+
+      <!-- Kalender (alle Schüler) -->
+      <section class="panel" id="panel-kalender">
+        <div class="panel-head">
+          <h2>Kalender</h2>
+          <p>Alle Termine deiner Schüler auf einen Blick.</p>
+        </div>
+        <div class="cal-bar">
+          <h3 id="calMonth">—</h3>
+          <div class="cal-nav">
+            <button id="calPrev" aria-label="Vorheriger Monat">‹</button>
+            <button id="calToday" aria-label="Heute" style="width:auto;padding:0 12px;font-size:.85rem">Heute</button>
+            <button id="calNext" aria-label="Nächster Monat">›</button>
+          </div>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-legend">
+          <span><span class="swatch" style="background:var(--primary)"></span> Bestätigt</span>
+          <span><span class="swatch" style="background:transparent;border:1px dashed #d9a73a"></span> Vorschlag</span>
+        </div>
+      </section>
+
+      <!-- Verfügbarkeiten (alle Schüler, nach Name) -->
+      <section class="panel" id="panel-verfuegbar">
+        <div class="panel-head">
+          <h2>Verfügbarkeiten</h2>
+          <p>Wann deine Schüler regelmäßig Zeit haben — sortiert nach Namen.</p>
+        </div>
+        <div id="availAll"><p class="empty-note">Lädt …</p></div>
+      </section>
+
+      <!-- Lerngruppen -->
+      <section class="panel" id="panel-gruppen">
+        <div class="panel-head">
+          <h2>Lerngruppen</h2>
+          <p>Gruppen anlegen und Schüler zuordnen.</p>
+        </div>
+        <div id="groupListWrap">
+          <form class="add-row" id="groupForm">
+            <input type="text" id="groupName" class="grow" placeholder="Neue Gruppe, z. B. Statistik Mo 15 Uhr" required />
+            <button type="submit" class="btn btn-primary">Gruppe anlegen</button>
+          </form>
+          <div class="list-head">Gruppen</div>
+          <div id="groupList"><p class="empty-note">Lädt …</p></div>
+        </div>
+        <div id="groupDetail" hidden></div>
+      </section>
+
+      <!-- Materialien -->
+      <section class="panel" id="panel-materialien">
+        <div class="panel-head">
+          <h2>Materialien</h2>
+          <p>Dateien hochladen und gezielt mit Schülern oder Gruppen teilen.</p>
+        </div>
+
+        <form id="materialForm">
+          <label class="dropzone" id="materialDrop">
+            <input type="file" id="materialFile" hidden />
+            <p><strong>Datei auswählen</strong> oder hierher ziehen</p>
+            <p style="font-size:.85rem;margin-top:6px" id="materialFileName">Bis 25 MB pro Datei.</p>
+          </label>
+          <div class="list-head">Teilen mit</div>
+          <div id="materialTargets" class="share-targets"><p class="empty-note">Lädt …</p></div>
+          <button type="submit" class="btn btn-primary" style="margin-top:14px">Hochladen &amp; teilen</button>
+          <span id="materialStatus" style="margin-left:14px;color:var(--muted)"></span>
+        </form>
+
+        <div class="list-head" style="margin-top:30px">Geteilte Materialien</div>
+        <div id="materialList"><p class="empty-note">Lädt …</p></div>
+      </section>
+
+      <!-- Nachrichten -->
+      <section class="panel" id="panel-chat">
+        <div class="panel-head">
+          <h2>Nachrichten</h2>
+          <p>Schreibe mit einzelnen Schülern oder ganzen Lerngruppen.</p>
+        </div>
+        <div id="chatPickWrap">
+          <div class="list-head">Schüler</div>
+          <div id="chatStudentList"><p class="empty-note">Lädt …</p></div>
+          <div class="list-head" style="margin-top:24px">Lerngruppen</div>
+          <div id="chatGroupList"><p class="empty-note">Lädt …</p></div>
+        </div>
+        <div id="chatConvo" hidden>
+          <button class="btn btn-ghost btn-sm" id="chatBack" style="margin-bottom:14px">← Schülerliste</button>
+          <h3 id="chatWith" style="margin-bottom:12px"></h3>
+          <div class="chat">
+            <div class="chat-thread" id="chatThread"><p class="empty-note">Lädt …</p></div>
+            <form class="chat-input" id="chatForm">
+              <input type="text" id="chatText" placeholder="Nachricht…" autocomplete="off" />
+              <button type="submit" class="btn btn-primary">Senden</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- Inhalte (CMS) -->
+      <section class="panel" id="panel-inhalte">
+        <div class="panel-head">
+          <h2>Inhalte</h2>
+          <p>Bearbeite die Texte der öffentlichen Seiten. Gespeicherte Änderungen sind sofort live.</p>
+        </div>
+        <div class="add-row">
+          <select id="cmsPage" class="grow"></select>
+        </div>
+        <div id="cmsFields"><p class="empty-note">Wähle oben eine Seite.</p></div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

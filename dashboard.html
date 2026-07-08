@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mein Bereich — Studiumm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="container header-inner">
+      <a href="dashboard.html" class="brand"><span class="brand-mark">σ</span><span class="brand-name">Studiumm</span></a>
+      <div class="app-user">
+        <div class="notif-wrap">
+          <button class="notif-bell" id="notifBell" aria-label="Benachrichtigungen">🔔<span class="notif-count" id="notifCount" hidden>0</span></button>
+          <div class="notif-menu" id="notifMenu" hidden>
+            <div class="notif-head">Benachrichtigungen</div>
+            <div id="notifList"><p class="empty-note">Noch nichts Neues.</p></div>
+          </div>
+        </div>
+        <span class="who" id="whoami">Hallo!</span>
+        <button class="btn btn-ghost btn-sm" id="logoutBtn">Abmelden</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="app" id="appShell">
+    <aside class="app-side">
+      <button class="side-link active" data-panel="overview"><span class="ico">▣</span> Übersicht</button>
+      <button class="side-link" data-panel="kalender"><span class="ico">▤</span> Terminkalender</button>
+      <button class="side-link" data-panel="lernplan"><span class="ico">✓</span> Lernplan</button>
+      <button class="side-link" data-panel="dokumente"><span class="ico">▢</span> Dokumente</button>
+      <button class="side-link" data-panel="nachrichten"><span class="ico">✉</span> Nachrichten</button>
+      <a class="side-link" href="index.html" style="margin-top:auto"><span class="ico">←</span> Zur Website</a>
+    </aside>
+
+    <main class="app-main">
+
+      <!-- Übersicht -->
+      <section class="panel active" id="panel-overview">
+        <div class="panel-head">
+          <h2 id="greeting">Hallo!</h2>
+          <p>Dein persönlicher Bereich — wähle ein Werkzeug.</p>
+        </div>
+        <div class="ov-grid">
+          <button class="ov-card" data-open="kalender">
+            <div class="ov-ico">▤</div>
+            <h3>Terminkalender</h3>
+            <p><span id="ovTermine">0</span> anstehende Termine</p>
+          </button>
+          <button class="ov-card" data-open="lernplan">
+            <div class="ov-ico">✓</div>
+            <h3>Lernplan</h3>
+            <p><span id="ovTasks">0</span> offene Aufgaben</p>
+          </button>
+          <button class="ov-card" data-open="dokumente">
+            <div class="ov-ico">▢</div>
+            <h3>Dokumente</h3>
+            <p><span id="ovDocs">0</span> Dateien</p>
+          </button>
+        </div>
+      </section>
+
+      <!-- Terminkalender -->
+      <section class="panel" id="panel-kalender">
+        <div class="panel-head">
+          <h2>Terminkalender</h2>
+          <p>Plane deine Sitzungen und Lerntermine.</p>
+        </div>
+
+        <div class="cal-bar">
+          <h3 id="calMonth">—</h3>
+          <div class="cal-nav">
+            <button id="calPrev" aria-label="Vorheriger Monat">‹</button>
+            <button id="calToday" aria-label="Heute" style="width:auto;padding:0 12px;font-size:.85rem">Heute</button>
+            <button id="calNext" aria-label="Nächster Monat">›</button>
+          </div>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-legend">
+          <span><span class="swatch" style="background:var(--primary)"></span> Bestätigt</span>
+          <span><span class="swatch" style="background:transparent;border:1px dashed #d9a73a"></span> Vorschlag</span>
+        </div>
+
+        <form class="add-row" id="terminForm" style="margin-top:22px">
+          <input type="date" id="terminDate" required />
+          <span class="time-range">
+            <input type="time" id="terminTime" aria-label="Von" />
+            <span class="time-dash">–</span>
+            <input type="time" id="terminTimeEnd" aria-label="Bis" />
+          </span>
+          <select id="terminTask" aria-label="Aus Lernplan wählen">
+            <option value="">Aus Lernplan wählen…</option>
+          </select>
+          <input type="text" id="terminTitle" class="grow" placeholder="Titel, z. B. Sitzung Modul 2" required />
+          <button type="submit" class="btn btn-primary" data-mode="self">Eintragen</button>
+          <button type="submit" class="btn btn-ghost" data-mode="propose">Dem Tutor vorschlagen</button>
+          <div class="repeat-row">
+            <label for="terminRepeatEvery">Wiederholen — alle</label>
+            <input type="number" id="terminRepeatEvery" min="1" max="365" placeholder="z. B. 7" />
+            <label for="terminRepeatUntil">Tage, bis</label>
+            <input type="date" id="terminRepeatUntil" />
+            <span class="repeat-hint">7 = wöchentlich · 14 = alle zwei Wochen · 1 = täglich</span>
+          </div>
+        </form>
+
+        <div class="list-head">Vorschläge</div>
+        <div id="terminProposals"></div>
+
+        <div class="list-head">Anstehende Termine</div>
+        <div id="terminList"></div>
+
+        <div class="list-head" id="cancelledHead" hidden>Abgesagte Termine</div>
+        <div id="cancelledList"></div>
+
+        <div class="list-head">Meine Verfügbarkeiten</div>
+        <p class="empty-note" style="padding:0 0 8px">Wann hast du regelmäßig Zeit? Dein Tutor sieht das bei der Terminplanung.</p>
+        <form class="add-row" id="availForm">
+          <select id="availDay">
+            <option value="0">Montag</option>
+            <option value="1">Dienstag</option>
+            <option value="2">Mittwoch</option>
+            <option value="3">Donnerstag</option>
+            <option value="4">Freitag</option>
+            <option value="5">Samstag</option>
+            <option value="6">Sonntag</option>
+          </select>
+          <input type="time" id="availFrom" required />
+          <input type="time" id="availTo" required />
+          <button type="submit" class="btn btn-primary">Hinzufügen</button>
+        </form>
+        <div id="availList"></div>
+      </section>
+
+      <!-- Lernplan -->
+      <section class="panel" id="panel-lernplan">
+        <div class="panel-head">
+          <h2>Lernplan</h2>
+          <p>Strukturiere deine Aufgaben in Listen und hake sie ab.</p>
+        </div>
+
+        <form class="add-row" id="listForm">
+          <input type="text" id="listTitle" class="grow" placeholder="Neue Liste, z. B. Klausur Modul 2" required />
+          <button type="submit" class="btn btn-primary">Liste anlegen</button>
+        </form>
+
+        <div id="planList"></div>
+      </section>
+
+      <!-- Dokumente -->
+      <section class="panel" id="panel-dokumente">
+        <div class="panel-head">
+          <h2>Dokumente</h2>
+          <p>Lade Skripte, Aufgaben und Notizen hoch.</p>
+        </div>
+
+        <label class="dropzone" id="dropzone">
+          <input type="file" id="fileInput" multiple hidden />
+          <p><strong>Datei auswählen</strong> oder hierher ziehen</p>
+          <p style="font-size:.85rem;margin-top:6px">Bis 25 MB pro Datei — sicher in deinem persönlichen Bereich gespeichert.</p>
+        </label>
+
+        <div id="docList"></div>
+
+        <div class="list-head">Vom Tutor geteilt</div>
+        <div id="sharedMaterials"><p class="empty-note">Noch keine geteilten Materialien.</p></div>
+      </section>
+
+      <!-- Nachrichten -->
+      <section class="panel" id="panel-nachrichten">
+        <div class="panel-head">
+          <h2>Nachrichten</h2>
+          <p>Schreibe mit deinem Tutor oder in deinen Lerngruppen.</p>
+        </div>
+        <div id="convPick">
+          <div class="list-head">Unterhaltungen</div>
+          <div id="convList"><p class="empty-note">Lädt …</p></div>
+        </div>
+        <div id="convThreadWrap" hidden>
+          <button class="btn btn-ghost btn-sm" id="convBack" style="margin-bottom:14px">← Übersicht</button>
+          <h3 id="convTitle" style="margin-bottom:12px"></h3>
+          <div class="chat">
+            <div class="chat-thread" id="chatThread"><p class="empty-note">Lädt …</p></div>
+            <form class="chat-input" id="chatForm">
+              <input type="text" id="chatText" placeholder="Nachricht schreiben…" autocomplete="off" />
+              <button type="submit" class="btn btn-primary">Senden</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

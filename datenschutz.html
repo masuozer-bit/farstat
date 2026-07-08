@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Datenschutz — Studiumm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand"><span class="brand-mark">σ</span><span class="brand-name">Studiumm</span></a>
+      <nav class="nav">
+        <a href="module.html">Module</a>
+        <a href="ueber.html">Über</a>
+        <a href="preise.html">Preise</a>
+        <a href="kontakt.html">Kontakt</a>
+        <a href="anmelden.html" class="nav-cta">Anmelden</a>
+      </nav>
+      <button class="nav-toggle" aria-label="Menü" aria-expanded="false" aria-controls="mobile-nav"><span></span><span></span><span></span></button>
+    </div>
+    <nav class="mobile-nav" id="mobile-nav">
+      <a href="module.html">Module</a>
+      <a href="ueber.html">Über</a>
+      <a href="preise.html">Preise</a>
+      <a href="kontakt.html">Kontakt</a>
+      <a href="anmelden.html">Anmelden</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <div class="container">
+      <div class="page-head">
+        <span class="eyebrow" data-cms="datenschutz.eyebrow">Rechtliches</span>
+        <h1 data-cms-html="datenschutz.title">Datenschutz&shy;erklärung</h1>
+      </div>
+
+      <div class="legal">
+        <h2>1. Verantwortlicher</h2>
+        <p>Verantwortlich für die Datenverarbeitung auf dieser Website ist:</p>
+        <address>
+          <span class="placeholder" data-cms="datenschutz.name">[Vor- und Nachname]</span><br />
+          <span class="placeholder" data-cms="datenschutz.strasse">[Straße und Hausnummer]</span><br />
+          <span class="placeholder" data-cms="datenschutz.ort">[PLZ und Ort]</span><br />
+          E-Mail: <a href="mailto:hallo@studiumm.de">hallo@studiumm.de</a>
+        </address>
+
+        <h2>2. Hosting und Server-Logfiles</h2>
+        <p>Diese Website wird bei <span class="placeholder" data-cms="datenschutz.hoster">[Hosting-Anbieter, z. B. Netlify / Vercel / Strato]</span> gehostet. Beim Aufruf erhebt der Anbieter automatisch Informationen (Server-Logfiles), die dein Browser übermittelt: IP-Adresse, Datum und Uhrzeit des Zugriffs, aufgerufene Seite, Browsertyp und Betriebssystem. Die Verarbeitung erfolgt zur Sicherstellung eines störungsfreien Betriebs auf Grundlage unseres berechtigten Interesses (Art. 6 Abs. 1 lit. f DSGVO).</p>
+
+        <h2>3. Kontaktaufnahme</h2>
+        <p>Wenn du uns per Kontaktformular, E-Mail oder WhatsApp kontaktierst, verarbeiten wir deine Angaben (z. B. Name, E-Mail-Adresse, Nachricht) zur Bearbeitung deiner Anfrage. Das Kontaktformular dieser Seite öffnet dein eigenes E-Mail-Programm — es werden dabei keine Daten an unseren Server übertragen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b und lit. f DSGVO. Die Daten werden gelöscht, sobald sie nicht mehr erforderlich sind.</p>
+
+        <h2>4. Google Fonts</h2>
+        <p>Diese Website lädt Schriftarten von Google Fonts. Dabei wird eine Verbindung zu Servern von Google hergestellt, wodurch deine IP-Adresse an Google übermittelt wird (Art. 6 Abs. 1 lit. f DSGVO). <span class="placeholder" data-cms="datenschutz.fonts_hinweis">[Empfehlung: Schriften lokal einbinden („self-hosted"), dann entfällt diese Übermittlung.]</span></p>
+
+        <h2>5. Deine Rechte</h2>
+        <p>Du hast jederzeit das Recht auf Auskunft (Art. 15), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) sowie Widerspruch (Art. 21 DSGVO). Außerdem steht dir ein Beschwerderecht bei einer Datenschutz-Aufsichtsbehörde zu.</p>
+
+        <h2>6. Aktualität</h2>
+        <p>Diese Datenschutzerklärung hat den Stand <span class="placeholder" data-cms="datenschutz.stand">[Monat/Jahr]</span> und wird angepasst, wenn sich die Datenverarbeitung ändert.</p>
+
+        <p style="margin-top:32px;font-size:0.85rem;">
+          <strong>Hinweis:</strong> Dies ist eine unverbindliche Vorlage. Bitte an deine tatsächliche Datenverarbeitung anpassen (Hosting, Tools, Buchungssysteme) und im Zweifel rechtlich prüfen lassen.
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>© <span id="year"></span> Studiumm</span>
+      <nav>
+        <a href="kontakt.html">Kontakt</a>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="content.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

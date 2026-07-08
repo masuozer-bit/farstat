@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kontakt — Studiumm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand"><span class="brand-mark">σ</span><span class="brand-name">Studiumm</span></a>
+      <nav class="nav">
+        <a href="module.html">Module</a>
+        <a href="ueber.html">Über</a>
+        <a href="preise.html">Preise</a>
+        <a href="kontakt.html" class="active">Kontakt</a>
+        <a href="anmelden.html" class="nav-cta">Anmelden</a>
+      </nav>
+      <button class="nav-toggle" aria-label="Menü" aria-expanded="false" aria-controls="mobile-nav"><span></span><span></span><span></span></button>
+    </div>
+    <nav class="mobile-nav" id="mobile-nav">
+      <a href="module.html">Module</a>
+      <a href="ueber.html">Über</a>
+      <a href="preise.html">Preise</a>
+      <a href="kontakt.html">Kontakt</a>
+      <a href="anmelden.html">Anmelden</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <div class="container">
+      <div class="page-head">
+        <span class="eyebrow" data-cms="kontakt.eyebrow">Kontakt</span>
+        <h1 data-cms="kontakt.title">Schreib mir</h1>
+      </div>
+
+      <div class="contact">
+        <div class="contact-text">
+          <ul class="contact-list">
+            <li>✉ <a href="mailto:hallo@studiumm.de">hallo@studiumm.de</a></li>
+            <li data-cms="kontakt.info2">↺ Antwort innerhalb von 24 Stunden</li>
+            <li data-cms="kontakt.info3">◷ Online — deutschlandweit</li>
+          </ul>
+          <div class="contact-actions">
+            <a href="mailto:hallo@studiumm.de?subject=Nachhilfe-Anfrage" class="btn btn-primary">E-Mail schreiben</a>
+            <a href="https://wa.me/4915123456789" class="btn btn-wa" target="_blank" rel="noopener">WhatsApp</a>
+          </div>
+        </div>
+
+        <form class="contact-form" id="contactForm" data-mailto="hallo@studiumm.de">
+          <div class="field">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" required />
+          </div>
+          <div class="field">
+            <label for="email">E-Mail</label>
+            <input type="email" id="email" name="email" required />
+          </div>
+          <div class="field">
+            <label for="modul">Modul / Thema</label>
+            <input type="text" id="modul" name="modul" placeholder="z. B. Modul 2, R-Kurs 1" />
+          </div>
+          <div class="field">
+            <label for="nachricht">Nachricht</label>
+            <textarea id="nachricht" name="nachricht" rows="4" placeholder="Welches Modul? Wann ist die Prüfung?"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Nachricht senden</button>
+          <p class="form-note" id="formNote">Öffnet dein E-Mail-Programm mit der fertigen Nachricht.</p>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>© <span id="year"></span> Studiumm</span>
+      <nav>
+        <a href="kontakt.html">Kontakt</a>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="content.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Impressum — Studiumm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand"><span class="brand-mark">σ</span><span class="brand-name">Studiumm</span></a>
+      <nav class="nav">
+        <a href="module.html">Module</a>
+        <a href="ueber.html">Über</a>
+        <a href="preise.html">Preise</a>
+        <a href="kontakt.html">Kontakt</a>
+        <a href="anmelden.html" class="nav-cta">Anmelden</a>
+      </nav>
+      <button class="nav-toggle" aria-label="Menü" aria-expanded="false" aria-controls="mobile-nav"><span></span><span></span><span></span></button>
+    </div>
+    <nav class="mobile-nav" id="mobile-nav">
+      <a href="module.html">Module</a>
+      <a href="ueber.html">Über</a>
+      <a href="preise.html">Preise</a>
+      <a href="kontakt.html">Kontakt</a>
+      <a href="anmelden.html">Anmelden</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <div class="container">
+      <div class="page-head">
+        <span class="eyebrow" data-cms="impressum.eyebrow">Rechtliches</span>
+        <h1 data-cms="impressum.title">Impressum</h1>
+      </div>
+
+      <div class="legal">
+        <h2>Angaben gemäß § 5 TMG</h2>
+        <address>
+          <span class="placeholder" data-cms="impressum.name1">[Vor- und Nachname]</span><br />
+          <span class="placeholder" data-cms="impressum.strasse">[Straße und Hausnummer]</span><br />
+          <span class="placeholder" data-cms="impressum.ort">[PLZ und Ort]</span>
+        </address>
+
+        <h2>Kontakt</h2>
+        <p>
+          Telefon: <span class="placeholder" data-cms="impressum.telefon">[Telefonnummer]</span><br />
+          E-Mail: <a href="mailto:hallo@studiumm.de">hallo@studiumm.de</a>
+        </p>
+
+        <h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
+        <address>
+          <span class="placeholder" data-cms="impressum.name2">[Vor- und Nachname]</span><br />
+          <span class="placeholder" data-cms="impressum.anschrift2">[Anschrift wie oben]</span>
+        </address>
+
+        <h2>Umsatzsteuer</h2>
+        <p>Umsatzsteuer-Identifikationsnummer gemäß § 27 a UStG: <span class="placeholder" data-cms="impressum.ustid">[USt-IdNr. oder „nicht vorhanden / Kleinunternehmer nach § 19 UStG"]</span></p>
+
+        <h2>Streitschlichtung</h2>
+        <p>Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: <a href="https://ec.europa.eu/consumers/odr/" target="_blank" rel="noopener">https://ec.europa.eu/consumers/odr/</a>. Wir sind nicht verpflichtet und nicht bereit, an einem Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+
+        <h2>Haftung für Inhalte</h2>
+        <p>Als Diensteanbieter sind wir gemäß § 7 Abs. 1 TMG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Nach §§ 8 bis 10 TMG sind wir als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen.</p>
+
+        <p style="margin-top:32px;font-size:0.85rem;">
+          <strong>Hinweis:</strong> Dies ist eine unverbindliche Vorlage. Bitte die <span class="placeholder">[Platzhalter]</span> mit deinen echten Daten ersetzen und vor Veröffentlichung rechtlich prüfen lassen.
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>© <span id="year"></span> Studiumm</span>
+      <nav>
+        <a href="kontakt.html">Kontakt</a>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="content.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

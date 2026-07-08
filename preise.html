@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preise — Studiumm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand"><span class="brand-mark">σ</span><span class="brand-name">Studiumm</span></a>
+      <nav class="nav">
+        <a href="module.html">Module</a>
+        <a href="ueber.html">Über</a>
+        <a href="preise.html" class="active">Preise</a>
+        <a href="kontakt.html">Kontakt</a>
+        <a href="anmelden.html" class="nav-cta">Anmelden</a>
+      </nav>
+      <button class="nav-toggle" aria-label="Menü" aria-expanded="false" aria-controls="mobile-nav"><span></span><span></span><span></span></button>
+    </div>
+    <nav class="mobile-nav" id="mobile-nav">
+      <a href="module.html">Module</a>
+      <a href="ueber.html">Über</a>
+      <a href="preise.html">Preise</a>
+      <a href="kontakt.html">Kontakt</a>
+      <a href="anmelden.html">Anmelden</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <div class="container">
+      <div class="page-head">
+        <span class="eyebrow" data-cms="preise.eyebrow">Preise</span>
+        <h1 data-cms="preise.title">Faire Pakete</h1>
+        <p data-cms="preise.subtitle">Transparent und ohne versteckte Kosten — einzeln oder in der Kleingruppe.</p>
+      </div>
+
+      <div class="toggle" id="priceToggle">
+        <button data-mode="einzel" class="active">Einzelunterricht</button>
+        <button data-mode="gruppe">Kleingruppe</button>
+      </div>
+      <p class="mode-desc" id="modeDesc">1:1 online — volle Aufmerksamkeit, ganz in deinem Tempo.</p>
+
+      <div class="pricing">
+        <div class="plan">
+          <h3 data-cms="preise.plan1.title">Einzelstunde</h3>
+          <p class="price"><span class="amount" data-einzel="40 €" data-gruppe="22 €">40 €</span> / 60 Min <span class="per-person">· pro Person</span></p>
+          <ul>
+            <li data-cms="preise.plan1.li1">Online</li>
+            <li data-cms="preise.plan1.li2">Flexibel buchbar</li>
+          </ul>
+        </div>
+        <div class="plan plan-featured">
+          <span class="plan-badge" data-cms="preise.plan2.badge">Beliebt</span>
+          <h3 data-cms="preise.plan2.title">5er-Paket</h3>
+          <p class="price"><span class="amount" data-einzel="180 €" data-gruppe="99 €">180 €</span> / 5 × 60 Min <span class="per-person">· pro Person</span></p>
+          <ul>
+            <li data-cms="preise.plan2.li1">Vergünstigter Satz</li>
+            <li data-cms="preise.plan2.li2">Durchgehender Plan</li>
+          </ul>
+        </div>
+        <div class="plan">
+          <h3 data-cms="preise.plan3.title">Prüfungs-Coaching</h3>
+          <p class="price"><span class="amount" data-einzel="ab 120 €" data-gruppe="ab 70 €">ab 120 €</span> / individuell <span class="per-person">· pro Person</span></p>
+          <ul>
+            <li data-cms="preise.plan3.li1">Intensive Vorbereitung</li>
+            <li data-cms="preise.plan3.li2">Altklausuren &amp; Übungen</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="pricing-note" data-cms="preise.note">Erstgespräch immer kostenlos. Kleingruppe: 2–4 Personen, Preis pro Person. Alle Preise inkl. USt.</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>© <span id="year"></span> Studiumm</span>
+      <nav>
+        <a href="kontakt.html">Kontakt</a>
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="content.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
