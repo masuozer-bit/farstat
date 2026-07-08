@@ -189,11 +189,12 @@
           <div class="study-actions">
             <button class="btn btn-primary study-show" id="fcShow">Antwort zeigen</button>
             <div class="fc-rate" id="fcRate" hidden>
-              <button class="btn fc-again" data-rate="again">Nochmal</button>
-              <button class="btn fc-hard"  data-rate="hard">Schwer</button>
-              <button class="btn fc-good"  data-rate="good">Gut</button>
-              <button class="btn fc-easy"  data-rate="easy">Leicht</button>
+              <button class="btn fc-again" data-rate="again"><span>Nochmal</span><small class="fc-ivl" data-ivl="again"></small></button>
+              <button class="btn fc-hard"  data-rate="hard"><span>Schwer</span><small class="fc-ivl" data-ivl="hard"></small></button>
+              <button class="btn fc-good"  data-rate="good"><span>Gut</span><small class="fc-ivl" data-ivl="good"></small></button>
+              <button class="btn fc-easy"  data-rate="easy"><span>Leicht</span><small class="fc-ivl" data-ivl="easy"></small></button>
             </div>
+            <p class="fc-explain" id="fcExplain" hidden></p>
           </div>
           <div class="study-done" id="studyDone" hidden>
             <p class="study-done-mark">✓</p>

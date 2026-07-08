@@ -436,6 +436,28 @@ a.d-dl { color: var(--primary); font-weight: 600; font-size: 0.9rem; }
 .deck-due { color: var(--primary); font-weight: 600; }
 .deck-btns { display: flex; align-items: center; gap: 8px; }
 
+.deck-new { color: #c98a3c; font-weight: 600; }
+.fc-tag { font-size: 0.72rem; color: var(--muted); background: var(--surface-2); border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+.fc-tag-new { color: var(--primary-dark); background: var(--primary-soft); }
+
+/* Plan & Einstellungen pro Stapel */
+.deck-plan { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 16px; }
+.plan-controls { display: flex; flex-wrap: wrap; gap: 16px; }
+.plan-controls label { display: flex; flex-direction: column; gap: 6px; font-size: 0.82rem; font-weight: 600; color: var(--muted); }
+.plan-controls input[type="date"], .plan-controls input[type="number"] {
+  padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; font: inherit; color: var(--ink); background: var(--surface);
+}
+.plan-controls input[type="number"] { width: 90px; }
+.plan-controls input:focus { outline: none; border-color: var(--primary); }
+.ret-line { display: flex; align-items: center; gap: 10px; }
+.ret-line input[type="range"] { accent-color: var(--primary); }
+.ret-val { font-variant-numeric: tabular-nums; color: var(--ink); min-width: 40px; }
+.plan-summary { margin-top: 14px; font-size: 0.95rem; line-height: 1.55; color: var(--ink); }
+.plan-hint { margin-top: 8px; font-size: 0.82rem; color: var(--muted); }
+.plan-ok { color: var(--primary-dark); font-weight: 600; }
+.plan-warn { color: #b3564e; font-weight: 600; }
+.plan-muted { color: var(--muted); }
+
 .deck-cards { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 16px; }
 .fc-add { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
 .fc-add input {
@@ -476,12 +498,14 @@ body.modal-open { overflow: hidden; }
 .study-actions { margin-top: 18px; }
 .study-show { width: 100%; }
 .fc-rate { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.fc-rate .btn { padding: 12px 6px; font-size: 0.9rem; color: #fff; border: none; }
+.fc-rate .btn { flex-direction: column; gap: 3px; padding: 10px 6px; font-size: 0.9rem; color: #fff; border: none; }
+.fc-rate .btn .fc-ivl { font-size: 0.72rem; font-weight: 500; opacity: 0.92; font-variant-numeric: tabular-nums; }
 .fc-again { background: #b3564e; }
 .fc-hard  { background: #c98a3c; }
 .fc-good  { background: var(--primary); }
 .fc-easy  { background: #4f9d7e; }
 .fc-rate .btn:hover { filter: brightness(0.94); }
+.fc-explain { margin-top: 12px; font-size: 0.82rem; line-height: 1.5; color: var(--muted); text-align: center; }
 
 .study-done { text-align: center; padding: 30px 10px; }
 .study-done-mark {

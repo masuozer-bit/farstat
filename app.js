@@ -288,17 +288,21 @@
       return { id: r.id, name: r.name, size: r.size, type: r.type, date: r.created_at, path: r.storage_path };
     });
 
-    var decks = await sb.from('decks').select('id,name,created_at').order('created_at', { ascending: true });
-    var cards = await sb.from('cards').select('id,deck_id,front,back,due,interval,ease,reps,created_at').order('created_at', { ascending: true });
+    var decks = await sb.from('decks').select('id,name,deadline,retention,new_per_day,created_at').order('created_at', { ascending: true });
+    var cards = await sb.from('cards').select('id,deck_id,front,back,state,difficulty,stability,due,last_review,reps,lapses,created_at').order('created_at', { ascending: true });
     var byDeck = {};
     (cards.data || []).forEach(function (c) {
       (byDeck[c.deck_id] = byDeck[c.deck_id] || []).push({
         id: c.id, front: c.front, back: c.back,
-        due: c.due, interval: c.interval, ease: c.ease, reps: c.reps
+        state: c.state || 'new', difficulty: c.difficulty || 0, stability: c.stability || 0,
+        due: c.due, last_review: c.last_review, reps: c.reps || 0, lapses: c.lapses || 0
       });
     });
     data.decks = (decks.data || []).map(function (d) {
-      return { id: d.id, name: d.name, cards: byDeck[d.id] || [] };
+      return {
+        id: d.id, name: d.name, cards: byDeck[d.id] || [],
+        deadline: d.deadline || '', retention: d.retention || 0.9, newPerDay: (d.new_per_day == null ? 10 : d.new_per_day)
+      };
     });
   }
 
@@ -347,7 +351,7 @@
     var openTasks = data.plan.reduce(function (n, l) {
       return n + l.tasks.filter(function (t) { return !t.done; }).length;
     }, 0);
-    var dueCards = data.decks.reduce(function (n, d) { return n + dueCount(d); }, 0);
+    var dueCards = data.decks.reduce(function (n, d) { return n + deckStats(d).todayTotal; }, 0);
     setText('ovTermine', upcoming);
     setText('ovTasks', openTasks);
     setText('ovDue', dueCards);
@@ -834,13 +838,123 @@
   }
 
   // =====================================================================
-  // KARTEIKARTEN (Anki-artig: Stapel, Karten, Wiederholung im Abstand)
+  // KARTEIKARTEN — Anki-artig mit FSRS-Scheduler (DSR-Modell)
+  // ---------------------------------------------------------------------
+  // FSRS 4.5 (Free Spaced Repetition Scheduler): statt starrer Multiplikatoren
+  // modelliert der Algorithmus für jede Karte Difficulty (D) und Stability (S)
+  // und berechnet das Intervall so, dass die Merkwahrscheinlichkeit auf die
+  // gewünschte Ziel-Merkrate (retention) fällt. Transparenz: vor jeder Antwort
+  // sieht der Nutzer, wann jede Bewertung die Karte erneut fällig macht.
   // =====================================================================
 
-  // Wie viele Karten eines Stapels sind heute (oder überfällig) dran?
-  function dueCount(deck) {
+  // Standard-Parameter von FSRS 4.5 (17 Gewichte, w0..w16).
+  var FSRS_W = [0.4072, 1.1829, 3.1262, 15.4722, 7.2102, 0.5316, 1.0651, 0.0234,
+    1.616, 0.1544, 1.0824, 1.9813, 0.0953, 0.2975, 2.2042, 0.2407, 2.9466];
+  var FSRS_DECAY = -0.5;
+  var FSRS_FACTOR = 19 / 81; // = 0.9^(1/DECAY) − 1  → Stability = Intervall bei 90 %
+
+  function clampD(d) { return Math.min(Math.max(d, 1), 10); }
+  function initStability(g) { return Math.max(FSRS_W[g - 1], 0.1); }
+  function initDifficulty(g) { return clampD(FSRS_W[4] - Math.exp(FSRS_W[5] * (g - 1)) + 1); }
+  function nextDifficulty(d, g) {
+    var nd = d - FSRS_W[6] * (g - 3);
+    return clampD(FSRS_W[7] * FSRS_W[4] + (1 - FSRS_W[7]) * nd); // Rückkehr zum Mittelwert
+  }
+  // Merkwahrscheinlichkeit nach t Tagen bei Stabilität S.
+  function retrievability(t, s) { return Math.pow(1 + FSRS_FACTOR * t / s, FSRS_DECAY); }
+  // Intervall (Tage), damit die Merkrate genau auf r fällt.
+  function intervalForRetention(s, r) { return (s / FSRS_FACTOR) * (Math.pow(r, 1 / FSRS_DECAY) - 1); }
+  function nextStabilityRecall(d, s, r, g) {
+    var hard = g === 2 ? FSRS_W[15] : 1;
+    var easy = g === 4 ? FSRS_W[16] : 1;
+    return s * (1 + Math.exp(FSRS_W[8]) * (11 - d) * Math.pow(s, -FSRS_W[9]) *
+      (Math.exp((1 - r) * FSRS_W[10]) - 1) * hard * easy);
+  }
+  function nextStabilityForget(d, s, r) {
+    return FSRS_W[11] * Math.pow(d, -FSRS_W[12]) * (Math.pow(s + 1, FSRS_W[13]) - 1) *
+      Math.exp((1 - r) * FSRS_W[14]);
+  }
+
+  // Datum-Helfer.
+  function parseDate(s) { var p = String(s).split('-'); return Date.UTC(+p[0], +p[1] - 1, +p[2]); }
+  function diffDays(a, b) { return Math.round((parseDate(b) - parseDate(a)) / 86400000); }
+  function round2(n) { return Math.round(n * 100) / 100; }
+
+  // Berechnet (ohne die Karte zu verändern) die neue Planung für eine Bewertung g (1–4).
+  function fsrsCompute(card, deck, g) {
+    var ret = deck.retention || 0.9;
+    var isNew = card.state === 'new' || !card.stability;
+    var S, D;
+    if (isNew) {
+      S = initStability(g);
+      D = initDifficulty(g);
+    } else {
+      var elapsed = card.last_review ? Math.max(0, diffDays(card.last_review, todayStr())) : 0;
+      var R = retrievability(elapsed, card.stability);
+      D = nextDifficulty(card.difficulty, g);
+      S = (g === 1)
+        ? Math.max(0.1, Math.min(nextStabilityForget(card.difficulty, card.stability, R), card.stability))
+        : nextStabilityRecall(card.difficulty, card.stability, R, g);
+    }
+    var ivl = intervalForRetention(S, ret);
+    // „Nochmal" wird immer in derselben Sitzung wiederholt.
+    var requeue = (g === 1) || ivl < 1;
+    var days = Math.max(1, Math.round(ivl));
+    return { S: round2(S), D: round2(D), days: days, requeue: requeue,
+      due: requeue ? todayStr() : addDays(todayStr(), days) };
+  }
+
+  // Intervall menschenlesbar machen.
+  function fmtInterval(days) {
+    if (days < 1) return 'gleich';
+    if (days === 1) return '1 Tag';
+    if (days < 30) return days + ' Tage';
+    if (days < 365) return Math.round(days / 30) + ' Mon.';
+    return (Math.round(days / 36.5) / 10).toString().replace('.', ',') + ' J.';
+  }
+
+  // Zähler pro Stapel: fällige Wiederholungen + heute erlaubte neue Karten.
+  function deckStats(deck) {
     var today = todayStr();
-    return deck.cards.filter(function (c) { return (c.due || today) <= today; }).length;
+    var reviews = deck.cards.filter(function (c) { return c.state !== 'new' && (c.due || today) <= today; }).length;
+    var newAvail = deck.cards.filter(function (c) { return c.state === 'new'; }).length;
+    var newToday = Math.min(newAvail, deck.newPerDay || 0);
+    return { reviews: reviews, newAvail: newAvail, newToday: newToday, todayTotal: reviews + newToday, total: deck.cards.length };
+  }
+
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  // Lernpensum bis zur Deadline berechnen.
+  function planSummary(deck) {
+    var st = deckStats(deck);
+    var parts = [];
+    parts.push('<strong>' + st.newAvail + '</strong> neue Karte' + (st.newAvail === 1 ? '' : 'n') + ' übrig · ' +
+      '<strong>' + st.reviews + '</strong> Wiederholung' + (st.reviews === 1 ? '' : 'en') + ' heute fällig.');
+    if (deck.deadline) {
+      var daysLeft = diffDays(todayStr(), deck.deadline);
+      if (daysLeft < 0) {
+        parts.push('<span class="plan-warn">Der Prüfungstermin liegt in der Vergangenheit.</span>');
+      } else if (st.newAvail === 0) {
+        parts.push('Alle Karten sind eingeführt — noch <strong>' + daysLeft + '</strong> Tage bis zur Prüfung.');
+      } else {
+        var recommended = Math.ceil(st.newAvail / Math.max(1, daysLeft));
+        var finishIn = Math.ceil(st.newAvail / Math.max(1, deck.newPerDay || 1));
+        var onTrack = (deck.newPerDay || 0) >= recommended;
+        parts.push('Noch <strong>' + daysLeft + '</strong> Tage. Um alle neuen Karten rechtzeitig einzuführen: ' +
+          'mind. <strong>' + recommended + '</strong> neue/Tag. ' +
+          'Bei ' + (deck.newPerDay || 0) + '/Tag bist du in <strong>' + finishIn + '</strong> Tagen durch — ' +
+          (onTrack ? '<span class="plan-ok">rechtzeitig ✓</span>' : '<span class="plan-warn">zu langsam ⚠ Tempo erhöhen</span>') + '.');
+      }
+    } else {
+      parts.push('<span class="plan-muted">Trage einen Prüfungstermin ein, um dein Lernpensum zu berechnen.</span>');
+    }
+    return parts.join(' ');
   }
 
   function renderDecks() {
@@ -851,34 +965,55 @@
       return;
     }
     wrap.innerHTML = data.decks.map(function (d) {
-      var due = dueCount(d);
-      var total = d.cards.length;
+      var st = deckStats(d);
       var cardsHtml = d.cards.map(function (c) {
+        var tag = c.state === 'new' ? '<span class="fc-tag fc-tag-new">neu</span>'
+          : '<span class="fc-tag" title="fällig ' + esc(c.due || '') + '">' + fmtInterval(diffDays(todayStr(), c.due || todayStr())) + '</span>';
         return '<div class="fc-row">' +
           '<span class="fc-q"><strong>' + esc(c.front) + '</strong><small>' + esc(c.back) + '</small></span>' +
+          tag +
           '<button class="icon-btn" data-del-card="' + d.id + '|' + c.id + '" title="Karte löschen">✕</button></div>';
       }).join('');
+      var meta = st.total + ' Karte' + (st.total === 1 ? '' : 'n') +
+        (st.reviews ? ' · <span class="deck-due">' + st.reviews + ' fällig</span>' : '') +
+        (st.newToday ? ' · <span class="deck-new">' + st.newToday + ' neu</span>' : '');
       return '<div class="deck">' +
         '<div class="deck-head">' +
-          '<div class="deck-title"><h3>' + esc(d.name) + '</h3>' +
-            '<span class="deck-meta">' + total + ' Karte' + (total === 1 ? '' : 'n') +
-            (due ? ' · <span class="deck-due">' + due + ' fällig</span>' : ' · alles gelernt') + '</span></div>' +
+          '<div class="deck-title"><h3>' + esc(d.name) + '</h3><span class="deck-meta">' + meta + '</span></div>' +
           '<div class="deck-btns">' +
-            '<button class="btn btn-primary btn-sm" data-study="' + d.id + '"' + (due ? '' : ' disabled') + '>Lernen' + (due ? ' (' + due + ')' : '') + '</button>' +
+            '<button class="btn btn-primary btn-sm" data-study="' + d.id + '"' + (st.todayTotal ? '' : ' disabled') + '>Lernen' + (st.todayTotal ? ' (' + st.todayTotal + ')' : '') + '</button>' +
+            '<button class="btn btn-ghost btn-sm" data-toggle-plan="' + d.id + '">Plan</button>' +
             '<button class="btn btn-ghost btn-sm" data-toggle-cards="' + d.id + '">Karten</button>' +
             '<button class="icon-btn" data-del-deck="' + d.id + '" title="Stapel löschen">🗑</button>' +
           '</div>' +
         '</div>' +
+        // Plan & Einstellungen
+        '<div class="deck-plan" id="deckPlan-' + d.id + '" hidden>' +
+          '<div class="plan-controls">' +
+            '<label>Prüfungstermin<input type="date" data-deadline="' + d.id + '" value="' + esc(d.deadline || '') + '" /></label>' +
+            '<label>Neue Karten / Tag<input type="number" min="0" max="200" data-newperday="' + d.id + '" value="' + (d.newPerDay || 0) + '" /></label>' +
+            '<label>Ziel-Merkrate<span class="ret-line"><input type="range" min="80" max="97" step="1" data-retention="' + d.id + '" value="' + Math.round((d.retention || 0.9) * 100) + '" /><span class="ret-val" id="retVal-' + d.id + '">' + Math.round((d.retention || 0.9) * 100) + ' %</span></span></label>' +
+          '</div>' +
+          '<p class="plan-summary" id="planSummary-' + d.id + '">' + planSummary(d) + '</p>' +
+          '<p class="plan-hint">Höhere Merkrate = kürzere Abstände & mehr Wiederholungen (sicherer). Niedrigere = weniger Aufwand, aber du vergisst öfter.</p>' +
+        '</div>' +
+        // Karten
         '<div class="deck-cards" id="deckCards-' + d.id + '" hidden>' +
           '<form class="fc-add" data-add-card="' + d.id + '">' +
             '<input type="text" name="front" placeholder="Vorderseite (Frage)" required />' +
             '<input type="text" name="back" placeholder="Rückseite (Antwort)" required />' +
             '<button type="submit" class="btn btn-ghost btn-sm">+ Karte</button>' +
           '</form>' +
-          (total ? cardsHtml : '<p class="empty-note">Noch keine Karten in diesem Stapel.</p>') +
+          (st.total ? cardsHtml : '<p class="empty-note">Noch keine Karten in diesem Stapel.</p>') +
         '</div>' +
       '</div>';
     }).join('');
+  }
+
+  function refreshPlanSummary(deckId) {
+    var deck = data.decks.filter(function (d) { return d.id === deckId; })[0];
+    var el = document.getElementById('planSummary-' + deckId);
+    if (deck && el) el.innerHTML = planSummary(deck);
   }
 
   function wireDecks() {
@@ -889,9 +1024,11 @@
       e.preventDefault();
       var name = val('deckName').trim();
       if (!name) return;
-      var res = await sb.from('decks').insert({ name: name }).select('id,name').single();
+      var res = await sb.from('decks').insert({ name: name })
+        .select('id,name,deadline,retention,new_per_day').single();
       if (res.error) return dbError('den Stapel', res.error);
-      data.decks.push({ id: res.data.id, name: res.data.name, cards: [] });
+      var r = res.data;
+      data.decks.push({ id: r.id, name: r.name, cards: [], deadline: r.deadline || '', retention: r.retention || 0.9, newPerDay: (r.new_per_day == null ? 10 : r.new_per_day) });
       deckForm.reset(); renderDecks(); updateOverview();
     });
 
@@ -908,28 +1045,66 @@
       if (!front || !back) return;
       var res = await sb.from('cards')
         .insert({ deck_id: deckId, front: front, back: back })
-        .select('id,front,back,due,interval,ease,reps').single();
+        .select('id,front,back,state,difficulty,stability,due,last_review,reps,lapses').single();
       if (res.error) return dbError('die Karte', res.error);
       var deck = data.decks.filter(function (d) { return d.id === deckId; })[0];
       if (deck) {
         var c = res.data;
-        deck.cards.push({ id: c.id, front: c.front, back: c.back, due: c.due, interval: c.interval, ease: c.ease, reps: c.reps });
+        deck.cards.push({ id: c.id, front: c.front, back: c.back, state: c.state || 'new',
+          difficulty: c.difficulty || 0, stability: c.stability || 0, due: c.due, last_review: c.last_review, reps: c.reps || 0, lapses: c.lapses || 0 });
         renderDecks(); updateOverview();
-        // Karten-Ansicht offen halten und Fokus zurück ins Frage-Feld
         var open = document.getElementById('deckCards-' + deckId);
         if (open) { open.hidden = false; var fi = open.querySelector('input[name=front]'); if (fi) fi.focus(); }
       }
     });
 
-    // Buttons: Lernen / Karten anzeigen / löschen
+    // Plan-Einstellungen ändern (live Vorschau + speichern)
+    wrap.addEventListener('input', function (e) {
+      var ret = e.target.closest('[data-retention]');
+      if (ret) {
+        var lbl = document.getElementById('retVal-' + ret.dataset.retention);
+        if (lbl) lbl.textContent = ret.value + ' %';
+      }
+    });
+    wrap.addEventListener('change', async function (e) {
+      var dl = e.target.closest('[data-deadline]');
+      var np = e.target.closest('[data-newperday]');
+      var rt = e.target.closest('[data-retention]');
+      var target = dl || np || rt;
+      if (!target) return;
+      var deckId = target.dataset.deadline || target.dataset.newperday || target.dataset.retention;
+      var deck = data.decks.filter(function (d) { return d.id === deckId; })[0];
+      if (!deck) return;
+      var patch = {};
+      if (dl) { deck.deadline = dl.value || ''; patch.deadline = dl.value || null; }
+      if (np) { deck.newPerDay = Math.max(0, parseInt(np.value, 10) || 0); patch.new_per_day = deck.newPerDay; }
+      if (rt) { deck.retention = (parseInt(rt.value, 10) || 90) / 100; patch.retention = deck.retention; }
+      refreshPlanSummary(deckId);
+      // Zähler auf der Stapel-Kopfzeile aktualisieren (neue Karten/Tag kann sich ändern).
+      var head = document.querySelector('[data-study="' + deckId + '"]');
+      if (head) {
+        var st = deckStats(deck);
+        head.disabled = !st.todayTotal;
+        head.textContent = 'Lernen' + (st.todayTotal ? ' (' + st.todayTotal + ')' : '');
+      }
+      updateOverview();
+      var res = await sb.from('decks').update(patch).eq('id', deckId);
+      if (res.error) dbError('die Einstellungen', res.error);
+    });
+
+    // Buttons: Lernen / Plan / Karten / löschen
     wrap.addEventListener('click', async function (e) {
-      var study = e.target.closest('[data-study]');
+      var studyBtn = e.target.closest('[data-study]');
+      var togglePlan = e.target.closest('[data-toggle-plan]');
       var toggle = e.target.closest('[data-toggle-cards]');
       var delCard = e.target.closest('[data-del-card]');
       var delDeck = e.target.closest('[data-del-deck]');
 
-      if (study) {
-        startStudy(study.dataset.study);
+      if (studyBtn) {
+        startStudy(studyBtn.dataset.study);
+      } else if (togglePlan) {
+        var pbox = document.getElementById('deckPlan-' + togglePlan.dataset.togglePlan);
+        if (pbox) pbox.hidden = !pbox.hidden;
       } else if (toggle) {
         var box = document.getElementById('deckCards-' + toggle.dataset.toggleCards);
         if (box) box.hidden = !box.hidden;
@@ -955,16 +1130,21 @@
     wireStudy();
   }
 
-  // ---------- Lern-Modus mit Wiederholung im Abstand (vereinfachtes SM-2) ----------
-  var study = { deckId: null, queue: [], current: null };
+  // ---------- Lern-Modus mit FSRS ----------
+  var study = { deckId: null, queue: [], current: null, done: 0 };
+
+  function currentDeck() { return data.decks.filter(function (d) { return d.id === study.deckId; })[0]; }
 
   function startStudy(deckId) {
     var deck = data.decks.filter(function (d) { return d.id === deckId; })[0];
     if (!deck) return;
     var today = todayStr();
     study.deckId = deckId;
-    // Alle heute fälligen Karten in die Warteschlange (in ursprünglicher Reihenfolge).
-    study.queue = deck.cards.filter(function (c) { return (c.due || today) <= today; }).slice();
+    study.done = 0;
+    var dueReviews = deck.cards.filter(function (c) { return c.state !== 'new' && (c.due || today) <= today; });
+    var newCards = deck.cards.filter(function (c) { return c.state === 'new'; }).slice(0, deck.newPerDay || 0);
+    // Neue Karten unter die Wiederholungen mischen (etwas Interleaving im Stapel).
+    study.queue = shuffle(dueReviews.concat(newCards));
     study.current = null;
     document.getElementById('studyDone').hidden = true;
     document.getElementById('studyOverlay').hidden = false;
@@ -999,7 +1179,9 @@
     document.getElementById('fcDivider').hidden = true;
     document.getElementById('fcShow').hidden = false;
     document.getElementById('fcRate').hidden = true;
-    document.getElementById('studyProgress').textContent = (study.queue.length + 1) + ' übrig';
+    document.getElementById('fcExplain').hidden = true;
+    document.getElementById('studyProgress').textContent = (study.queue.length + 1) + ' übrig' +
+      (study.done ? ' · ' + study.done + ' gelernt' : '');
   }
 
   function revealAnswer() {
@@ -1007,44 +1189,43 @@
     document.getElementById('fcDivider').hidden = false;
     document.getElementById('fcShow').hidden = true;
     document.getElementById('fcRate').hidden = false;
-  }
-
-  // Neue Planung nach Bewertung berechnen (Intervalle in Tagen).
-  function schedule(card, rating) {
-    var ease = card.ease || 2.5;
-    var interval = card.interval || 0;
-    var requeue = false;
-    if (rating === 'again') {
-      ease = Math.max(1.3, ease - 0.2);
-      interval = 0;
-      requeue = true;                       // in dieser Sitzung erneut zeigen
-    } else if (rating === 'hard') {
-      ease = Math.max(1.3, ease - 0.15);
-      interval = interval < 1 ? 1 : Math.ceil(interval * 1.2);
-    } else if (rating === 'good') {
-      interval = interval < 1 ? 1 : Math.ceil(interval * ease);
-    } else { // easy
-      ease = ease + 0.15;
-      interval = interval < 1 ? 3 : Math.ceil(interval * ease * 1.3);
+    // Transparenz: für jede Bewertung das resultierende Intervall anzeigen.
+    var deck = currentDeck(), card = study.current;
+    if (deck && card) {
+      var map = { again: 1, hard: 2, good: 3, easy: 4 };
+      Object.keys(map).forEach(function (k) {
+        var r = fsrsCompute(card, deck, map[k]);
+        var el = document.querySelector('[data-ivl="' + k + '"]');
+        if (el) el.textContent = (k === 'again') ? 'gleich' : fmtInterval(r.requeue ? 0 : r.days);
+      });
+      var ex = document.getElementById('fcExplain');
+      ex.textContent = 'Der Zeitpunkt zeigt, wann die Karte wieder abgefragt wird. ' +
+        '„Nochmal" = vergessen (kommt gleich noch mal) · „Gut" = gewusst. Ziel-Merkrate: ' +
+        Math.round((deck.retention || 0.9) * 100) + ' %.';
+      ex.hidden = false;
     }
-    card.ease = Math.round(ease * 100) / 100;
-    card.interval = interval;
-    card.reps = (card.reps || 0) + 1;
-    card.due = requeue ? todayStr() : addDays(todayStr(), interval);
-    return requeue;
   }
 
   async function rateCard(rating) {
     var card = study.current;
-    if (!card) return;
-    var requeue = schedule(card, rating);
-    // Bei „Nochmal" ans Ende der aktuellen Sitzung hängen.
-    if (requeue) study.queue.push(card);
+    var deck = currentDeck();
+    if (!card || !deck) return;
+    var g = { again: 1, hard: 2, good: 3, easy: 4 }[rating];
+    var r = fsrsCompute(card, deck, g);
+    card.difficulty = r.D;
+    card.stability = r.S;
+    card.state = 'review';
+    card.reps = (card.reps || 0) + 1;
+    card.last_review = todayStr();
+    if (g === 1) card.lapses = (card.lapses || 0) + 1;
+    card.due = r.due;
+    study.done++;
+    if (r.requeue) study.queue.push(card); // in dieser Sitzung erneut zeigen
     nextCard();
-    // Persistenz im Hintergrund; Fehler nur protokollieren, Lernfluss nicht stören.
-    var res = await sb.from('cards')
-      .update({ due: card.due, interval: card.interval, ease: card.ease, reps: card.reps })
-      .eq('id', card.id);
+    var res = await sb.from('cards').update({
+      state: card.state, difficulty: card.difficulty, stability: card.stability,
+      due: card.due, last_review: card.last_review, reps: card.reps, lapses: card.lapses
+    }).eq('id', card.id);
     if (res.error) console.error('Karten-Fortschritt speichern', res.error);
   }
 
