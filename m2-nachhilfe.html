@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>M2 Statistik Nachhilfe</title>
+<meta name="description" content="Einzelnachhilfe für das Statistik-Modul M2 im Bachelor Psychologie an der FernUniversität in Hagen. Kostenloses 20 Minuten Gespräch." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@600;700&family=JetBrains+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400&display=swap" />
+<style>
+/* ---------- Tokens: hell (Standard) ---------- */
+:root{
+  --papier:#FAFAF7;
+  --papier-2:#F3F3EE;
+  --tinte:#14191C;
+  --gedaempft:#61706F;
+  --linien:#E2E6E1;
+  --akzent:#0E6B57;
+  --akzent-tief:#0A5544;
+  --akzent-kontrast:#FAFAF7;
+  --signal:#B4451F;
+  --raster:rgba(20,25,28,.055);
+  --kurve:rgba(14,107,87,.55);
+  --achse:rgba(20,25,28,.28);
+  --schatten:0 1px 0 rgba(20,25,28,.04);
+}
+/* ---------- Tokens: dunkel per Systemeinstellung ---------- */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --papier:#0D1215;
+    --papier-2:#111A1D;
+    --tinte:#E9EEEA;
+    --gedaempft:#8E9C99;
+    --linien:#232D2F;
+    --akzent:#4FB294;
+    --akzent-tief:#63C2A5;
+    --akzent-kontrast:#08110E;
+    --signal:#DE7C55;
+    --raster:rgba(233,238,234,.05);
+    --kurve:rgba(79,178,148,.5);
+    --achse:rgba(233,238,234,.24);
+    --schatten:0 1px 0 rgba(0,0,0,.3);
+  }
+}
+/* ---------- Tokens: dunkel per ausdrücklicher Wahl ---------- */
+:root[data-theme="dark"]{
+  --papier:#0D1215;
+  --papier-2:#111A1D;
+  --tinte:#E9EEEA;
+  --gedaempft:#8E9C99;
+  --linien:#232D2F;
+  --akzent:#4FB294;
+  --akzent-tief:#63C2A5;
+  --akzent-kontrast:#08110E;
+  --signal:#DE7C55;
+  --raster:rgba(233,238,234,.05);
+  --kurve:rgba(79,178,148,.5);
+  --achse:rgba(233,238,234,.24);
+  --schatten:0 1px 0 rgba(0,0,0,.3);
+}
+
+*,*::before,*::after{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  margin:0;
+  background-color:var(--papier);
+  background-image:
+    repeating-linear-gradient(to right, var(--raster) 0 1px, transparent 1px 28px),
+    repeating-linear-gradient(to bottom, var(--raster) 0 1px, transparent 1px 28px);
+  color:var(--tinte);
+  font-family:"Newsreader","Iowan Old Style",Georgia,serif;
+  font-size:1.0625rem;
+  line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+
+.huelle{max-width:720px;margin:0 auto;padding:0 22px;}
+
+h1,h2,h3{
+  font-family:"Instrument Sans","Helvetica Neue",Arial,sans-serif;
+  font-weight:700;
+  line-height:1.14;
+  letter-spacing:-.02em;
+  text-wrap:balance;
+  margin:0;
+}
+p{margin:0;}
+
+.marke{
+  font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:.7rem;
+  font-weight:500;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--gedaempft);
+  margin:0;
+}
+
+/* ---------- Knopf ---------- */
+.knopf{
+  display:inline-flex;align-items:center;gap:.6rem;
+  font-family:"Instrument Sans","Helvetica Neue",Arial,sans-serif;
+  font-weight:600;font-size:1rem;letter-spacing:-.005em;
+  background:var(--akzent);color:var(--akzent-kontrast);
+  text-decoration:none;
+  padding:.95rem 1.5rem;border-radius:3px;
+  transition:background-color .18s ease, transform .18s ease;
+}
+.knopf:hover{background:var(--akzent-tief);}
+.knopf:active{transform:translateY(1px);}
+.knopf .pfeil{font-family:"JetBrains Mono",monospace;font-size:.85em;opacity:.75;}
+a:focus-visible,.knopf:focus-visible{outline:2px solid var(--akzent);outline-offset:3px;border-radius:2px;}
+.knopf-zeile{display:flex;flex-direction:column;gap:.6rem;align-items:flex-start;}
+.knopf-fuss{
+  font-family:"JetBrains Mono",monospace;font-size:.72rem;
+  letter-spacing:.08em;color:var(--gedaempft);text-transform:uppercase;
+}
+
+/* ---------- Hero ---------- */
+.hero{position:relative;padding:76px 0 64px;overflow:hidden;}
+.hero-svg{
+  position:absolute;left:50%;transform:translateX(-50%);
+  bottom:0;width:min(1000px,132%);height:auto;
+  pointer-events:none;opacity:.85;
+}
+.hero-inhalt{position:relative;display:flex;flex-direction:column;gap:1.5rem;}
+.hero h1{font-size:clamp(2rem,7.6vw,3.05rem);}
+.hero-satz{color:var(--gedaempft);max-width:34em;}
+
+/* ---------- Abschnitte ---------- */
+section{padding:52px 0;border-top:1px solid var(--linien);}
+.abschnitt{display:flex;flex-direction:column;gap:1.4rem;}
+h2{font-size:clamp(1.35rem,4.4vw,1.7rem);}
+
+/* Kacheln */
+.kacheln{display:grid;grid-template-columns:1fr;gap:1px;background:var(--linien);border:1px solid var(--linien);border-radius:3px;overflow:hidden;}
+.kachel{
+  background:var(--papier-2);padding:1.15rem 1.25rem;
+  font-family:"Instrument Sans","Helvetica Neue",Arial,sans-serif;
+  font-weight:600;font-size:.98rem;line-height:1.35;letter-spacing:-.01em;
+}
+@media (min-width:620px){.kacheln{grid-template-columns:repeat(3,1fr);}}
+
+/* Fünf Aufgabentypen */
+.typen{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;}
+.typen li{
+  display:grid;grid-template-columns:2.9rem 1fr;align-items:baseline;
+  gap:.5rem;padding:1.05rem 0;border-bottom:1px solid var(--linien);
+}
+.typen li:first-child{border-top:1px solid var(--linien);}
+.typen .nr{
+  font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:.82rem;font-weight:500;color:var(--akzent);
+  font-variant-numeric:tabular-nums;letter-spacing:.04em;
+}
+.typen .txt{
+  font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:clamp(.95rem,3.4vw,1.08rem);font-weight:400;
+  line-height:1.4;letter-spacing:-.01em;
+}
+.platz{
+  color:var(--signal);
+  border-bottom:1px dashed currentColor;
+}
+
+/* Wer ich bin */
+.person{display:flex;flex-direction:column;gap:1.4rem;}
+@media (min-width:620px){.person{flex-direction:row;align-items:flex-start;gap:1.75rem;}}
+.foto{
+  flex:0 0 auto;width:132px;height:166px;
+  border:1px dashed var(--linien);border-radius:3px;
+  background:var(--papier-2);
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  padding:.75rem;
+  font-family:"JetBrains Mono",monospace;font-size:.62rem;line-height:1.5;
+  letter-spacing:.05em;color:var(--gedaempft);text-transform:uppercase;
+}
+.person-text{display:flex;flex-direction:column;gap:.7rem;}
+
+/* Preis */
+.preis{
+  font-family:"Instrument Sans","Helvetica Neue",Arial,sans-serif;
+  font-weight:600;font-size:clamp(1.15rem,4vw,1.4rem);
+  letter-spacing:-.02em;line-height:1.35;font-variant-numeric:tabular-nums;
+}
+
+/* Nebenwege */
+.nebenwege{display:flex;flex-direction:column;gap:.9rem;}
+.nebenweg{
+  display:flex;flex-wrap:wrap;align-items:baseline;gap:.55rem;
+  padding:1rem 0;border-bottom:1px solid var(--linien);
+}
+.nebenweg:first-child{border-top:1px solid var(--linien);}
+.nebenweg a{
+  font-family:"Instrument Sans","Helvetica Neue",Arial,sans-serif;
+  font-weight:600;color:var(--tinte);
+  text-decoration:none;border-bottom:1.5px solid var(--akzent);
+  padding-bottom:1px;
+}
+.nebenweg a:hover{color:var(--akzent);}
+.nebenweg .bei{color:var(--gedaempft);font-size:.95rem;}
+
+/* Fuß */
+.fuss{padding:52px 0 40px;border-top:1px solid var(--linien);display:flex;flex-direction:column;gap:2rem;}
+.fuss-nav{
+  display:flex;flex-wrap:wrap;gap:1.25rem;
+  font-family:"JetBrains Mono",monospace;font-size:.74rem;
+  letter-spacing:.09em;text-transform:uppercase;
+}
+.fuss-nav a{color:var(--gedaempft);text-decoration:none;}
+.fuss-nav a:hover{color:var(--tinte);}
+
+/* Recht */
+.recht{border-top:1px solid var(--linien);padding:44px 0;color:var(--gedaempft);font-size:.9rem;line-height:1.6;}
+.recht h2{font-size:1.05rem;color:var(--tinte);margin-bottom:1rem;}
+.recht h3{
+  font-family:"JetBrains Mono",monospace;font-size:.72rem;font-weight:500;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--tinte);
+  margin:1.6rem 0 .45rem;
+}
+.recht p, .recht address{margin:0 0 .7rem;font-style:normal;}
+.recht a{color:var(--gedaempft);}
+.p{
+  font-family:"JetBrains Mono",monospace;font-size:.85em;
+  color:var(--signal);border-bottom:1px dashed currentColor;
+}
+
+/* Notiz an mich selbst */
+.notiz{
+  border:1px dashed var(--linien);border-radius:3px;
+  background:var(--papier-2);padding:1.1rem 1.25rem;margin:0 0 44px;
+  font-family:"JetBrains Mono",monospace;font-size:.72rem;line-height:1.75;
+  color:var(--gedaempft);
+}
+.notiz b{color:var(--tinte);font-weight:500;}
+
+@media (prefers-reduced-motion: reduce){
+  *{transition:none !important;animation:none !important;}
+}
+</style>
+</head>
+<body>
+
+<main>
+  <!-- 1 — HERO -->
+  <header class="hero">
+    <svg class="hero-svg" viewBox="0 0 720 240" fill="none" aria-hidden="true" focusable="false">
+      <path d="M 524.5 200.0 L 524.5 156.1 L 527.8 158.4 L 531.0 160.6 L 534.3 162.8 L 537.5 164.8 L 540.8 166.8 L 544.0 168.7 L 547.3 170.6 L 550.6 172.3 L 553.8 174.0 L 557.1 175.6 L 560.3 177.1 L 563.6 178.6 L 566.9 180.0 L 570.1 181.3 L 573.4 182.5 L 576.6 183.7 L 579.9 184.8 L 583.1 185.9 L 586.4 186.9 L 589.7 187.8 L 592.9 188.7 L 596.2 189.5 L 599.4 190.3 L 602.7 191.1 L 606.0 191.7 L 609.2 192.4 L 612.5 193.0 L 615.7 193.5 L 619.0 194.1 L 622.2 194.5 L 625.5 195.0 L 628.8 195.4 L 632.0 195.8 L 635.3 196.2 L 638.5 196.5 L 641.8 196.8 L 645.1 197.1 L 648.3 197.3 L 651.6 197.6 L 654.8 197.8 L 658.1 198.0 L 661.4 198.2 L 664.6 198.4 L 667.9 198.5 L 671.1 198.7 L 674.4 198.8 L 677.6 198.9 L 680.9 199.0 L 684.2 199.1 L 687.4 199.2 L 690.7 199.3 L 693.9 199.4 L 697.2 199.4 L 700.4 199.5 L 703.7 199.5 L 707.0 199.6 L 710.2 199.6 L 713.5 199.7 L 716.7 199.7 L 720.0 199.7 L 720.0 200.0 Z" fill="var(--signal)" fill-opacity=".2"/>
+      <path d="M 524.5 200 L 524.5 156.1" stroke="var(--signal)" stroke-width="1" stroke-dasharray="3 3" stroke-opacity=".6"/>
+      <path d="M 0 200 L 720 200" stroke="var(--achse)" stroke-width="1"/>
+      <path d="M 360 200 L 360 30" stroke="var(--achse)" stroke-width="1" stroke-dasharray="2 4"/>
+      <path d="M 0.0 199.7 L 40.0 199.0 L 80.0 196.6 L 120.0 190.5 L 140.0 184.9 L 160.0 177.0 L 180.0 166.4 L 200.0 152.7 L 220.0 136.2 L 240.0 117.3 L 260.0 96.9 L 280.0 76.6 L 300.0 58.0 L 320.0 43.1 L 340.0 33.4 L 350.0 30.6 L 360.0 30.0 L 370.0 30.6 L 380.0 33.4 L 400.0 43.1 L 420.0 58.0 L 440.0 76.6 L 460.0 96.9 L 480.0 117.3 L 500.0 136.2 L 520.0 152.7 L 540.0 166.4 L 560.0 177.0 L 580.0 184.9 L 600.0 190.5 L 640.0 196.6 L 680.0 199.0 L 720.0 199.7" stroke="var(--kurve)" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>
+    </svg>
+
+    <div class="huelle hero-inhalt">
+      <p class="marke">FernUniversität in Hagen &middot; Modul M2</p>
+      <h1>M2 Statistik ist der Grund, warum viele hier aufhören.</h1>
+      <p class="hero-satz">Ich gebe Einzelnachhilfe für das Statistik-Modul im Bachelor Psychologie. Online, an genau den Stellen, an denen es klemmt.</p>
+      <div class="knopf-zeile">
+        <a class="knopf" href="https://calendly.com/DEIN-CALENDLY-LINK-HIER" target="_blank" rel="noopener noreferrer">Kostenloses 20 Minuten Gespräch <span class="pfeil">&rarr;</span></a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 2 — WAS DAS GESPRÄCH IST -->
+  <section>
+    <div class="huelle abschnitt">
+      <p class="marke">Das Gespräch</p>
+      <div class="kacheln">
+        <div class="kachel">20 Minuten, online</div>
+        <div class="kachel">Kein Verkaufsgespräch</div>
+        <div class="kachel">Ich sage dir ehrlich, ob ich helfen kann</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 — DIE FÜNF AUFGABENTYPEN -->
+  <section>
+    <div class="huelle abschnitt">
+      <p class="marke">Klausur</p>
+      <h2>Die fünf Aufgabentypen, die in fast jeder M2 Klausur vorkommen.</h2>
+      <ol class="typen">
+        <li><span class="nr">01</span><span class="txt"><span class="platz">AUFGABENTYP 1 EINSETZEN</span></span></li>
+        <li><span class="nr">02</span><span class="txt"><span class="platz">AUFGABENTYP 2 EINSETZEN</span></span></li>
+        <li><span class="nr">03</span><span class="txt"><span class="platz">AUFGABENTYP 3 EINSETZEN</span></span></li>
+        <li><span class="nr">04</span><span class="txt"><span class="platz">AUFGABENTYP 4 EINSETZEN</span></span></li>
+        <li><span class="nr">05</span><span class="txt"><span class="platz">AUFGABENTYP 5 EINSETZEN</span></span></li>
+      </ol>
+      <div class="knopf-zeile">
+        <a class="knopf" href="https://calendly.com/DEIN-CALENDLY-LINK-HIER" target="_blank" rel="noopener noreferrer">Kostenloses 20 Minuten Gespräch <span class="pfeil">&rarr;</span></a>
+        <span class="knopf-fuss">Öffnet Calendly in einem neuen Tab</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 — WER ICH BIN -->
+  <section>
+    <div class="huelle abschnitt">
+      <p class="marke">Wer ich bin</p>
+      <div class="person">
+        <div class="foto">Platzhalter&nbsp;— hier kommt ein echtes Foto von mir hin</div>
+        <div class="person-text">
+          <p>M.Sc. Psychologie (in Arbeit), FernUniversität in Hagen. Ich habe M2 selbst geschrieben. Ich unterrichte nur dieses eine Modul, dafür kenne ich es genau.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 — PREIS -->
+  <section>
+    <div class="huelle abschnitt">
+      <p class="marke">Preis</p>
+      <p class="preis">45 Euro pro 60 Minuten. Die ersten 20 Minuten sind kostenlos.</p>
+    </div>
+  </section>
+
+  <!-- 6 — ZWEITER AUFRUF -->
+  <section>
+    <div class="huelle abschnitt">
+      <p class="marke">Noch nicht sprechen?</p>
+      <div class="nebenwege">
+        <div class="nebenweg">
+          <a href="https://tally.so/DEIN-FORMULAR-LINK-HIER" target="_blank" rel="noopener noreferrer">Formelübersicht M2 als PDF</a>
+          <span class="bei">kostenlos, gegen deine E-Mail-Adresse</span>
+        </div>
+        <div class="nebenweg">
+          <a href="https://wa.me/49XXXXXXXXXXX" target="_blank" rel="noopener noreferrer">Kurze Frage per WhatsApp</a>
+          <span class="bei">meist am selben Tag beantwortet</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FUSS -->
+  <footer class="fuss">
+    <div class="huelle abschnitt">
+      <div class="knopf-zeile">
+        <a class="knopf" href="https://calendly.com/DEIN-CALENDLY-LINK-HIER" target="_blank" rel="noopener noreferrer">Kostenloses 20 Minuten Gespräch <span class="pfeil">&rarr;</span></a>
+      </div>
+      <nav class="fuss-nav">
+        <a href="#impressum">Impressum</a>
+        <a href="#datenschutz">Datenschutzerklärung</a>
+      </nav>
+    </div>
+  </footer>
+</main>
+
+<!-- RECHTLICHES -->
+<div class="recht" id="impressum">
+  <div class="huelle">
+    <h2>Impressum</h2>
+
+    <h3>Angaben gemäß § 5 DDG</h3>
+    <address>
+      <span class="p">[Vor- und Nachname]</span><br />
+      <span class="p">[Straße und Hausnummer]</span><br />
+      <span class="p">[PLZ und Ort]</span><br />
+      Deutschland
+    </address>
+
+    <h3>Kontakt</h3>
+    <p>
+      E-Mail: <span class="p">[E-Mail-Adresse]</span><br />
+      Telefon: <span class="p">[Telefonnummer]</span>
+    </p>
+
+    <h3>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h3>
+    <address><span class="p">[Vor- und Nachname, Anschrift wie oben]</span></address>
+
+    <h3>Umsatzsteuer</h3>
+    <p><span class="p">[USt-IdNr. gemäß § 27a UStG — oder: „Kleinunternehmer nach § 19 UStG, kein Ausweis von Umsatzsteuer."]</span></p>
+
+    <h3>Streitbeilegung</h3>
+    <p>Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung bereit: <a href="https://ec.europa.eu/consumers/odr/" target="_blank" rel="noopener noreferrer">ec.europa.eu/consumers/odr</a>. Ich bin nicht verpflichtet und nicht bereit, an einem Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+
+    <h3>Hinweis zur Berufsbezeichnung</h3>
+    <p>Ich biete Lernbegleitung und Nachhilfe zu Studieninhalten an. Es handelt sich nicht um psychologische Beratung, Diagnostik oder Psychotherapie.</p>
+  </div>
+</div>
+
+<div class="recht" id="datenschutz">
+  <div class="huelle">
+    <h2>Datenschutzerklärung</h2>
+
+    <h3>1. Verantwortlicher</h3>
+    <address>
+      <span class="p">[Vor- und Nachname]</span><br />
+      <span class="p">[Straße und Hausnummer]</span><br />
+      <span class="p">[PLZ und Ort]</span><br />
+      E-Mail: <span class="p">[E-Mail-Adresse]</span>
+    </address>
+
+    <h3>2. Hosting und Server-Logfiles</h3>
+    <p>Diese Seite wird bei <span class="p">[Hosting-Anbieter]</span> gehostet. Beim Aufruf verarbeitet der Anbieter automatisch technische Zugriffsdaten (IP-Adresse, Zeitpunkt, aufgerufene Seite, Browsertyp, Betriebssystem), um den Betrieb sicherzustellen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO.</p>
+
+    <h3>3. Google Fonts</h3>
+    <p>Diese Seite lädt die Schriftarten „Instrument Sans", „Newsreader" und „JetBrains Mono" von Google Fonts. Beim Laden wird eine Verbindung zu Servern von Google (Google Ireland Limited bzw. Google LLC, USA) hergestellt; dabei wird deine IP-Adresse an Google übermittelt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer einheitlichen Darstellung). Eine Übermittlung in die USA ist möglich. Wenn du das vermeiden möchtest, können die Schriften auch lokal eingebunden werden.</p>
+
+    <h3>4. Terminbuchung über Calendly</h3>
+    <p>Termine für das kostenlose Gespräch werden über Calendly (Calendly LLC, USA) gebucht. Der Button auf dieser Seite ist ein einfacher Link — es ist kein Calendly-Widget eingebettet, und es werden von dieser Seite aus keine Daten an Calendly übertragen. Erst wenn du dem Link folgst und dort einen Termin buchst, verarbeitet Calendly die von dir eingegebenen Daten (Name, E-Mail-Adresse, Terminwunsch) als eigenständiger Anbieter. Rechtsgrundlage für die anschließende Terminabwicklung ist Art. 6 Abs. 1 lit. b DSGVO. Es gilt zusätzlich die Datenschutzerklärung von Calendly.</p>
+
+    <h3>5. Formelübersicht als PDF</h3>
+    <p>Die kostenlose Formelübersicht wird über ein externes Formular bei <span class="p">[Formular-Anbieter, z. B. Tally]</span> angefordert. Auch hier führt von dieser Seite nur ein Link dorthin. Die dort eingegebene E-Mail-Adresse verwende ich ausschließlich, um dir das PDF zuzusenden. Rechtsgrundlage ist Art. 6 Abs. 1 lit. a DSGVO (Einwilligung), die du jederzeit widerrufen kannst.</p>
+
+    <h3>6. Kontaktaufnahme per WhatsApp oder E-Mail</h3>
+    <p>Wenn du mich per WhatsApp (WhatsApp Ireland Limited) oder E-Mail kontaktierst, verarbeite ich deine Angaben ausschließlich zur Beantwortung deiner Anfrage (Art. 6 Abs. 1 lit. b und lit. f DSGVO). Bei WhatsApp werden zusätzlich Daten durch den Messenger-Anbieter verarbeitet; es gilt dessen Datenschutzerklärung.</p>
+
+    <h3>7. Keine Cookies, keine Analyse</h3>
+    <p>Diese Seite setzt keine Cookies und bindet keine Analyse- oder Tracking-Dienste ein.</p>
+
+    <h3>8. Deine Rechte</h3>
+    <p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch sowie das Recht, dich bei einer Datenschutz-Aufsichtsbehörde zu beschweren. Wende dich dafür an die oben genannte E-Mail-Adresse.</p>
+
+    <p style="margin-top:1.6rem;"><span class="p">Hinweis für mich: Impressum und Datenschutzerklärung sind eine Vorlage. Vor der Veröffentlichung Platzhalter ausfüllen und rechtlich prüfen lassen.</span></p>
+  </div>
+</div>
+
+<div class="huelle">
+  <div class="notiz">
+    <b>Vor der Veröffentlichung ausfüllen — diesen Kasten danach löschen.</b><br />
+    01 &nbsp;Die fünf Aufgabentypen (Abschnitt „Klausur")<br />
+    02 &nbsp;Calendly-Link — steht dreimal im Quelltext<br />
+    03 &nbsp;Link zum PDF-Formular<br />
+    04 &nbsp;WhatsApp-Nummer im wa.me-Format<br />
+    05 &nbsp;Foto einsetzen (Platzhalter im Abschnitt „Wer ich bin")<br />
+    06 &nbsp;Impressum und Datenschutz: Name, Anschrift, E-Mail, Telefon, Hoster
+  </div>
+</div>
+
+</body>
+</html>
